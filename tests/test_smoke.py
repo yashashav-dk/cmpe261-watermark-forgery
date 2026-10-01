@@ -149,3 +149,26 @@ def test_run_imprint_needs_a_prompt_per_cover(tmp_path):
         smoke.run_imprint(
             FakeHarness(), object(), [1, 2], ["a cat"], _cover, log, META, tmp_path / "images", FakeImprint(), _quality
         )
+
+
+def test_run_imprint_resume_follows_logged_verdicts(tmp_path):
+    # An interrupted attempt logged "not flagged" at steps 10 and 20. On the re-run the detector
+    # would flag step 20, but the log must stay the single record of what was decided.
+    path = tmp_path / "runs.csv"
+    log = RunLog(path)
+    base = dict(stage="imprint", scheme="TR", condition="C1", image_id="39769", attack="imprint")
+    log.append({**base, "kind": "reference", "step": 0, "raw_score": 200.0, "score": 200.0, "is_watermarked": 1})
+    for step in (10, 20):
+        log.append({**base, "kind": "forged", "step": step, "raw_score": 50.0, "score": 50.0, "is_watermarked": 0})
+
+    smoke.run_imprint(
+        FakeHarness(), object(), [39769], ["a cat"], _cover, RunLog(path), META, tmp_path / "images", FakeImprint(), _quality
+    )
+    rows = [(r["kind"], r["step"], r["is_watermarked"]) for r in _rows(path)]
+    assert rows == [
+        ("reference", "0", "1"),
+        ("forged", "10", "0"),
+        ("forged", "20", "0"),
+        ("forged", "30", "1"),
+        ("done", "0", "1"),
+    ]
