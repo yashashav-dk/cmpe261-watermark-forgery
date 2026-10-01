@@ -65,3 +65,12 @@ def test_append_validates_columns(tmp_path):
         log.append({**KEY, "not_a_column": 1})
     with pytest.raises(ValueError, match="missing"):
         log.append({"stage": "clean"})
+
+
+def test_get_returns_stored_row_after_reopen(tmp_path):
+    path = tmp_path / "runs.csv"
+    RunLog(path).append({**KEY, "raw_score": 12.5, "is_watermarked": 1})
+    reopened = RunLog(path)
+    stored = reopened.get(**KEY)
+    assert (stored["raw_score"], stored["is_watermarked"], stored["psnr"]) == ("12.5", "1", "")
+    assert reopened.get(**{**KEY, "step": 10}) is None

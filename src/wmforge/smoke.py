@@ -10,6 +10,7 @@ from typing import Callable, Sequence
 from PIL import Image
 
 from wmforge import data, metrics
+from wmforge.harness import Detection
 from wmforge.records import RunLog
 
 TARGET_MODEL = "Manojb/stable-diffusion-2-1-base"
@@ -128,21 +129,29 @@ def run_imprint(
         last = {}
 
         def on_validate(step: int, image: Image.Image, optim_seconds: float) -> bool:
-            detection = harness.detect(image)
-            last["detection"] = detection
-            log.append(
-                _row(
-                    meta,
-                    **base,
-                    attack="imprint",
-                    kind="forged",
-                    step=step,
-                    detection=detection,
-                    seed=seed,
-                    seconds=optim_seconds,
-                    **quality_fn(cover, image),
+            logged = log.get(**base, kind="forged", step=step)
+            if logged is not None:
+                # An interrupted attempt already recorded this step. Its verdict stands, so the
+                # log stays the single record of what was decided.
+                detection = Detection(
+                    float(logged["raw_score"]), float(logged["score"]), logged["is_watermarked"] == "1"
                 )
-            )
+            else:
+                detection = harness.detect(image)
+                log.append(
+                    _row(
+                        meta,
+                        **base,
+                        attack="imprint",
+                        kind="forged",
+                        step=step,
+                        detection=detection,
+                        seed=seed,
+                        seconds=optim_seconds,
+                        **quality_fn(cover, image),
+                    )
+                )
+            last["detection"] = detection
             return stop_on_detect and detection.is_watermarked
 
         result = imprint_fn(
