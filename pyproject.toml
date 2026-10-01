@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68,<81"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wmforge"
+version = "0.1.0"
+description = "Forgery benchmark for semantic watermarks in diffusion models"
+requires-python = ">=3.10"
+license = {text = "GPL-3.0-only"}
+dependencies = [
+    "numpy>=1.24",
+    "pillow>=10",
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "scikit-image>=0.22",
+    "requests>=2.31",
+    "pyarrow>=14",
+]
+
+[project.optional-dependencies]
+attack = [
+    "torch>=2.4,<2.11",
+    "diffusers>=0.31",
+    "transformers>=4.46",
+    "accelerate>=1.1",
+    "lpips==0.1.4",
+]
+dev = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: downloads a tiny model and runs torch on CPU"]
