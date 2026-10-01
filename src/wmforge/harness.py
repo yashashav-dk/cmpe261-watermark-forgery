@@ -89,9 +89,10 @@ def load_target_pipe(model_id: str, revision: str, device: str):
     from diffusers import DPMSolverMultistepScheduler, StableDiffusionPipeline
 
     scheduler = DPMSolverMultistepScheduler.from_pretrained(model_id, subfolder="scheduler", revision=revision)
-    dtype = torch.float16 if device == "cuda" else torch.float32
+    # Full precision on every device: MarkDiffusion's Gaussian Shading builds float32 latents,
+    # which a half-precision pipeline rejects.
     pipe = StableDiffusionPipeline.from_pretrained(
-        model_id, revision=revision, scheduler=scheduler, torch_dtype=dtype, safety_checker=None
+        model_id, revision=revision, scheduler=scheduler, torch_dtype=torch.float32, safety_checker=None
     ).to(device)
     pipe.set_progress_bar_config(disable=True)
     return pipe

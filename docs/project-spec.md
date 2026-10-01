@@ -154,7 +154,7 @@ Findings from a first inspection of the bundled files (2026-10-01):
 
 The floor is sized to finish on a single Colab Pro account. Its largest cost is F2: 60 imprint runs. The reference implementation's documentation implies roughly 16 seconds per optimization step on an A40; that is an estimate, not a measurement, and check-in 1 measures the real figure on Colab before any floor run is scheduled. If the measured cost puts F2 out of reach, the step cap is lowered before the cover count is.
 
-The imprint optimization runs in fp32 with gradient checkpointing, as in the reference implementation. Whether it fits a 16 GB P100 is unverified and is checked before any HPC run is scheduled.
+The target pipeline runs in full precision (fp32) for generation and detection. MarkDiffusion's Gaussian Shading builds float32 latents that a half-precision pipeline rejects, and one precision for every scheme keeps the detectors comparable. The imprint optimization also runs in fp32 with gradient checkpointing, as in the reference implementation. Whether it fits a 16 GB P100 is unverified and is checked before any HPC run is scheduled.
 
 Sample sizes for each item are fixed before that item runs and are not changed after its results are seen.
 
