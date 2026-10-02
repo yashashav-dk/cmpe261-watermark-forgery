@@ -88,6 +88,32 @@ The next milestone needs 60 imprint runs (six schemes, 10 covers each). On this 
 - MarkDiffusion's Gaussian Shading builds its latents in float32 and fails on a half-precision pipeline. The target pipeline now runs in full precision for every scheme.
 - Colab's preinstalled `torchaudio` does not load against the PyTorch version MarkDiffusion pins. The notebook removes it.
 
+### Follow-up: Tree-Ring at a 150-step budget
+
+The three covers that resisted at 60 steps were still moving toward the threshold, so Tree-Ring was rerun on the same five covers with the cap raised to 150 steps. Everything else stayed the same: same model, same reference images, same stop-at-first-detection rule, same GPU. The run log is [`results/tr150/runs.csv`](../results/tr150/runs.csv).
+
+| Cover (COCO id) | 60-step run | 150-step run | PSNR when stopped |
+|---|---|---|---|
+| 410878 | not flagged, 54.7 at step 60 | flagged at step 120, 49.3 | 19.6 dB |
+| 25424 | flagged at step 60, 47.8 | flagged at step 50, 49.7 | 27.2 dB |
+| 166768 | flagged at step 50, 48.5 | flagged at step 50, 48.6 | 28.4 dB |
+| 32887 | not flagged, 55.9 at step 60 | not flagged, 51.5 at step 150 | 19.9 dB |
+| 519208 | not flagged, 50.3 at step 60 | flagged at step 70, 49.99 | 26.0 dB |
+
+Scores are the L1 distance to the watermark key; below 50 counts as watermarked.
+
+**Four of five covers were forged within 150 steps** (80%, 95% interval 38% to 96%), against two of five at 60 steps. The one miss was still falling about 0.5 per 10 steps at the cap.
+
+**The margins are thin.** Two successes sit just under the threshold (49.99 and 49.7). Repeating the same optimization gives scores that differ by about 0.3: cover 25424 scored 50.02 at step 50 in the first run and 49.67 in the second, which flipped its verdict at that step. Verdicts this close to the threshold should be read as coin flips, which is one reason the benchmark will report success at fixed step budgets with more covers rather than first-detection steps.
+
+**Slow covers pay in quality.** The two covers that needed more than 100 steps ended near 20 dB PSNR against the original photograph, with visible texture change; the fast ones stayed at 26 to 28 dB.
+
+**Cost.** Steps per cover averaged 88 (7.2 minutes); the run took 39 GPU-minutes. Stopping at first detection keeps the 150-step budget well under the 12.2 GPU-hour upper bound above.
+
+![Detector score against imprint step, 150-step cap](../results/tr150/trajectories.png)
+
+*Tree-Ring detector score for each cover photograph under the 150-step cap. Step 0 is the untouched photograph. A filled marker means the detector flagged the image as watermarked.*
+
 ## 5. Next steps
 
 In the order fixed by the specification:
