@@ -39,6 +39,8 @@ Measured cost: 4.9 s per imprint step, 4 to 6 s per generation, on one NVIDIA RT
 - Latha Boralingaiah
 - Yashashav Devalapalli Kamalraj
 
+Shared Google Drive folder (team, instructor, and TA have access): [CMPE261 Group 6 - Forging the Watermark](https://drive.google.com/drive/folders/1wkXOxPjfI648JPod1Fi2m9ItfrPvWVIT)
+
 ## Documents
 
 | Document | Contents |
