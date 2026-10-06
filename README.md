@@ -47,6 +47,7 @@ Shared Google Drive folder (team, instructor, and TA have access): [CMPE261 Grou
 |---|---|
 | [`docs/project-spec.md`](docs/project-spec.md) | Finalized specification, tentative abstract, report outline |
 | [`docs/checkin-1.md`](docs/checkin-1.md) | Data exploration, first results, 150-step follow-up |
+| [`docs/checkin-2.md`](docs/checkin-2.md) | Literature survey, approach, algorithms, draft report sections, check-in log |
 | [`data/README.md`](data/README.md) | Data sources and committed selections |
 
 ## Layout
