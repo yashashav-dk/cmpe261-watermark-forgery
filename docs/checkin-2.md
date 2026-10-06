@@ -2,7 +2,11 @@
 
 Forging the Watermark: Benchmarking False Attribution in Semantic Watermarks for Diffusion Models
 
-CMPE 261 Sec 01, Fall 2026. Group 6: Kanaka Sarat Siripurapu, Latha Boralingaiah, Yashashav Devalapalli Kamalraj.
+CMPE 261 Sec 01, Fall 2026. Group 6.
+
+- Kanaka Sarat Siripurapu, 019132776, kanakasarat.siripurapu@sjsu.edu
+- Latha Boralingaiah, 018301361, latha.boralingaiah@sjsu.edu
+- Yashashav Devalapalli Kamalraj, 017856371, yashashav.devalapallikamalraj@sjsu.edu
 
 Repository: https://github.com/yashashav-dk/cmpe261-watermark-forgery
 
