@@ -6,32 +6,38 @@ Semantic watermarks for diffusion models are tested almost entirely against remo
 
 ## Findings so far
 
-Two schemes on Stable Diffusion 2.1-base, attacked with the provider's own model (the strongest case), five real COCO photographs per scheme. The attack is the imprint forgery of Müller et al. (CVPR 2025): optimize the photograph until its inverted noise matches that of a watermarked image.
+Six semantic schemes on Stable Diffusion 2.1-base, attacked with the provider's own model (the strongest case), five real COCO photographs per scheme. The attack is the imprint forgery of Müller et al. (CVPR 2025): optimize the photograph until its inverted noise matches that of a watermarked image. Runs stop at first detection, with a cap of 60 steps for Gaussian Shading and 150 for the rest.
 
-| Scheme | Clean detection: TPR / FPR generated / FPR real photos | Forged within 60 steps | Forged within 150 steps | PSNR of forgeries |
+| Scheme | Clean detection: TPR / FPR generated / FPR real photos | Covers forged | Stop step, median (range) | PSNR at stop, median (range) |
 |---|---|---|---|---|
-| Gaussian Shading | 50/50 / 0/50 / 0/50 | 5/5, all by step 10 | not needed | 27.5 dB |
-| Tree-Ring | 50/50 / 2/50 / 0/50 | 2/5 | 4/5 | 24.2 dB |
+| Gaussian Shading | 50/50 / 0/50 / 0/50 | 5/5 | 10 (10 to 10) | 28.6 dB (22.7 to 31.8) |
+| PRC | 50/50 / 0/50 / 0/50 | 5/5 | 20 (20 to 30) | 27.7 dB (22.0 to 30.5) |
+| WIND | 50/50 / 0/50 / 0/50 | 5/5 | 30 (30 to 50) | 27.0 dB (21.2 to 29.4) |
+| Ring-ID | 49/50 / 0/50 / 0/50 | 5/5 | 70 (50 to 120) | 26.0 dB (20.1 to 27.9) |
+| SFW | 49/50 / 0/50 / 0/50 | 5/5 | 90 (80 to 140) | 25.1 dB (20.0 to 27.3) |
+| Tree-Ring | 50/50 / 2/50 / 0/50 | 4/5 | 70 (50 to 150) | 26.0 dB (19.6 to 28.4) |
 
-- **Gaussian Shading was forged on every photograph** after 10 optimization steps, about 49 seconds each, with bit accuracy 0.89 to 0.98 against a threshold of 0.7.
-- **Tree-Ring is harder but not safe.** Four of five photographs fell under its threshold within 150 steps. Two of those sat just under it (49.99 and 49.7 against 50), and repeated runs differ by about 0.3, so verdicts that close are coin flips. Covers that needed more than 100 steps ended near 20 dB PSNR, a visible cost.
-- **Five covers give wide intervals** (4/5 is 38% to 96% at 95% confidence). The next milestone uses 10 covers, six schemes, and fixed step budgets instead of stopping at first detection.
+- **All six schemes pass the inclusion rule** on clean images, and **every scheme was forged on every photograph except Tree-Ring**, which resisted on one at the 150-step cap.
+- **Key-based schemes fell fastest.** Gaussian Shading and PRC verified within 10 to 30 steps; the pattern-based schemes needed 50 to 150. Ring-ID and SFW crossed their threshold only narrowly, and repeated runs differ by about 0.3, so those verdicts are near coin flips.
+- **Five covers give wide intervals** (5/5 is 57% to 100%, 4/5 is 38% to 96% at 95% confidence), so the ordering above is by step count, not by success rate. The next milestone uses 10 covers and fixed step budgets instead of stopping at first detection.
+
+Full table with intervals and the per-cover breakdown: [`results/figures/summary_six_schemes.md`](results/figures/summary_six_schemes.md).
 
 ![Detector score against imprint step](results/figures/trajectories.png)
 
-*Detector score for each cover photograph as the imprint proceeds. Step 0 is the untouched photograph; a filled marker means the detector flagged the image as watermarked. Gaussian Shading from the check-in run (60-step cap, every cover flagged at the first check), Tree-Ring from the 150-step run.*
+*Detector score for each cover photograph as the imprint proceeds for the two Check-in 1 schemes. Step 0 is the untouched photograph; a filled marker means the detector flagged the image as watermarked.*
 
-Method, limits, cost, and problems found: [`docs/checkin-1.md`](docs/checkin-1.md). Run logs: [`results/checkin1/`](results/checkin1/) and [`results/tr150/`](results/tr150/).
+Method, limits, cost, and problems found: [`docs/checkin-1.md`](docs/checkin-1.md) and [`docs/checkin-2.md`](docs/checkin-2.md). Run logs: [`results/checkin1/`](results/checkin1/), [`results/tr150/`](results/tr150/), [`results/checkin2/`](results/checkin2/).
 
 ## Status
 
 Against the commitments in [`docs/project-spec.md`](docs/project-spec.md):
 
-- **F1, clean and real-photo baselines:** 2 of 6 core schemes done at 50 images per cell (spec: 100 watermarked, 200 unwatermarked, 100 real).
-- **F2, imprint forgery, same-model attacker:** 2 of 6 core schemes done at 5 covers (spec: 10).
+- **F1, clean and real-photo baselines:** 6 of 6 core schemes done at 50 images per cell (spec: 100 watermarked, 200 unwatermarked, 100 real).
+- **F2, imprint forgery, same-model attacker:** 6 of 6 core schemes done at 5 covers, stop at first detection (spec: 10 covers, fixed step budgets).
 - **F3, removal robustness:** not started.
 
-Measured cost: 4.9 s per imprint step, 4 to 6 s per generation, on one NVIDIA RTX PRO 6000.
+Measured cost: 4.9 s per imprint step on an NVIDIA RTX PRO 6000, 8.4 s on an A100; 4 to 6 s per generation.
 
 ## Team
 
@@ -56,10 +62,12 @@ Shared Google Drive folder (team, instructor, and TA have access): [CMPE261 Grou
 |---|---|
 | `src/wmforge/` | Harness over MarkDiffusion, imprint forgery attack, metrics, run log, runner, report |
 | `tests/` | Unit tests |
-| `scripts/` | Data selection; combined figure across runs |
+| `scripts/` | Data selection; combined figure, combined summary, and Check-in 2 figures from the run logs |
 | `notebooks/01_smoke_colab.ipynb` | Check-in 1 experiment on Colab |
 | `results/checkin1/` | Check-in run: log, summary table, figures (both schemes, 60-step cap) |
 | `results/tr150/` | Tree-Ring rerun with a 150-step cap |
+| `results/checkin2/` | Check-in 2 run: baselines and imprint forgery for Ring-ID, SFW, WIND, PRC |
+| `notebooks/02_checkin2_colab.ipynb` | Check-in 2 experiment on Colab |
 | `results/figures/` | Figures that combine runs |
 
 ## Running
@@ -78,6 +86,14 @@ The experiment needs a GPU. Open `notebooks/01_smoke_colab.ipynb` in Colab and r
 The combined figure above comes from:
 
     python scripts/combined_figure.py GS=results/checkin1 TR=results/tr150 --out results/figures/trajectories.png
+
+The three Check-in 2 figures in `results/checkin2/figures/` come from the committed run logs and need no GPU:
+
+    python scripts/checkin2_figures.py
+
+The six-scheme summary table comes from (a `SCHEME:stage=dir` entry takes only those stages from that run):
+
+    python scripts/combined_summary.py GS=results/checkin1 TR:clean,real=results/checkin1 TR:imprint=results/tr150 RI=results/checkin2 SFW=results/checkin2 WIND=results/checkin2 PRC=results/checkin2 --out results/figures/summary_six_schemes.md
 
 ## License and attribution
 
