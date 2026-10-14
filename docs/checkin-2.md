@@ -32,6 +32,8 @@ The instructor and the TA were invited to the repository and the Drive folder be
 Check-in 1 delivered the finalized specification, the software pipeline, and a first false-attribution measurement on two schemes. Since then the team has done the following.
 
 - **Extended the first experiment.** A 150-step rerun of the Tree-Ring forgery on the same five photographs, which raised the success count from 2 of 5 to 4 of 5 and showed how thin the margins are near the detector threshold (Section 6).
+- **Completed F1 and F2 at check-in scale for the four remaining core schemes.** Ring-ID, SFW, WIND and PRC each got the clean baseline, the real-photo baseline, and imprint forgery on the same five covers, on an A100 (`notebooks/02_checkin2_colab.ipynb`, `results/checkin2/`). All four pass the inclusion rule and all four were forged on every cover. Two missing dependencies were found and pinned (qrcode for SFW, galois and ldpc for PRC).
+- **Cross-run summary tooling.** `report.py` now produces a per-cover forgery table (covers forged with Wilson intervals, stop step and PSNR as median and range) and can merge run logs scheme by scheme, so one table covers all six schemes from three runs (`results/figures/summary_six_schemes.md`).
 - **Literature survey.** A survey of 16 papers covering the nine candidate schemes, the attacks the benchmark uses, and existing benchmarks, written up in Section 3.3. It settles the open question left in the specification about forgery evaluations of schemes other than Tree-Ring and Gaussian Shading.
 - **Approach and algorithm write-up.** Sections 4 and 5 describe the pipeline as built, the two protocol choices that were tried, and the forgery and detection algorithms as pseudo-code, so a reader can check the implementation against the papers.
 - **Repository documentation.** The project README now carries the findings so far and a status line against each floor commitment, and links the shared Drive folder.
@@ -102,14 +104,20 @@ Input: cover image c, watermarked reference r, attacker pipeline (VAE, UNet, DDI
 
 ## 6. Results so far
 
-Target: Stable Diffusion 2.1-base, 512 by 512, 50 sampling steps, guidance 7.5, full precision. Attacker: the same model (condition C1). 50 prompts, 50 COCO val2017 photographs, and 5 cover photographs per scheme. One NVIDIA RTX PRO 6000 on Colab. Brackets are 95 percent Wilson intervals.
+Target: Stable Diffusion 2.1-base, 512 by 512, 50 sampling steps, guidance 7.5, full precision. Attacker: the same model (condition C1). 50 prompts, 50 COCO val2017 photographs, and 5 cover photographs per scheme, stop at first detection, cap 60 steps for Gaussian Shading and 150 for the rest. Gaussian Shading and Tree-Ring ran on an RTX PRO 6000 (Check-in 1, Tree-Ring rerun at 150 steps), the other four on an A100 on 2026-10-19. Brackets are 95 percent Wilson intervals. The table is produced by `scripts/combined_summary.py` from the three committed run logs and saved as `results/figures/summary_six_schemes.md`.
 
-| Scheme | TPR watermarked | FPR unwatermarked | FPR real photos | Forged, 60-step cap | Forged, 150-step cap | PSNR of forgeries |
+| Scheme | TPR watermarked | FPR unwatermarked | FPR real photos | Covers forged | Stop step, median (range) | PSNR at stop, median (range) |
 |---|---|---|---|---|---|---|
-| Gaussian Shading | 50/50 | 0/50 | 0/50 | 5/5 [57%, 100%], all by step 10 | not needed | 27.5 dB |
-| Tree-Ring | 50/50 | 2/50 | 0/50 | 2/5 [12%, 77%] | 4/5 [38%, 96%] | 24.2 dB |
+| Gaussian Shading | 50/50 | 0/50 | 0/50 | 5/5 [57%, 100%] | 10 (10 to 10) | 28.6 dB (22.7 to 31.8) |
+| PRC | 50/50 | 0/50 | 0/50 | 5/5 [57%, 100%] | 20 (20 to 30) | 27.7 dB (22.0 to 30.5) |
+| WIND | 50/50 | 0/50 | 0/50 | 5/5 [57%, 100%] | 30 (30 to 50) | 27.0 dB (21.2 to 29.4) |
+| Ring-ID | 49/50 | 0/50 | 0/50 | 5/5 [57%, 100%] | 70 (50 to 120) | 26.0 dB (20.1 to 27.9) |
+| SFW | 49/50 | 0/50 | 0/50 | 5/5 [57%, 100%] | 90 (80 to 140) | 25.1 dB (20.0 to 27.3) |
+| Tree-Ring | 50/50 | 2/50 | 0/50 | 4/5 [38%, 96%] | 70 (50 to 150) | 26.0 dB (19.6 to 28.4) |
 
-Gaussian Shading was forged on every photograph at the first check, about 49 seconds per cover. Tree-Ring is harder but not safe: two of its four successes sit just under the threshold, and repeated optimizations differ by about 0.3, so those verdicts are coin flips. Photographs that took more than 100 steps to forge ended near 20 dB PSNR, which is visible texture damage. One imprint step costs 4.9 seconds on this GPU; the full F2 item (six schemes, 10 covers) is about 12 GPU-hours at a 150-step budget.
+All six core schemes pass the inclusion rule on the clean baseline. Every scheme was forged on every cover except Tree-Ring, which resisted on one cover at the 150-step cap. Ordered from easiest to hardest by the median stop step: Gaussian Shading, PRC, WIND, Ring-ID, SFW, Tree-Ring. The key-based schemes (Gaussian Shading, PRC) fell within 30 steps; the pattern-based schemes needed 50 to 150.
+
+What the statistics do and do not support. Five covers per scheme separate "forged on every cover" from "resisted on some" and nothing finer: 5 of 5 carries a lower bound of 57 percent, 4 of 5 a lower bound of 38 percent, so the ordering above is by step count, not by success rate. Ring-ID and SFW crossed their threshold of 50 only narrowly (scores 49.0 to 49.9), and repeated optimizations of the same cover differ by about 0.3, so those verdicts are near coin flips. PRC is reported by verdict only because its score direction in MarkDiffusion is unverified. The same photograph (COCO 32887) was the hardest cover for every scheme and ended near 20 dB PSNR, which is visible texture damage. One imprint step costs 4.9 seconds on the RTX PRO 6000 and 8.4 seconds on the A100 in full precision with gradient checkpointing.
 
 ## 7. Check-ins
 
@@ -143,7 +151,7 @@ Commits per member: Yashashav 8, Latha 7, Kanaka Sarat 6. Member responsibilitie
 
 ## 8. Next steps and risks
 
-1. F1: clean baseline and real-photo baseline for the remaining four core schemes (Ring-ID, SFW, WIND, PRC) at the specification's sample sizes. Each scheme is about 400 generations and detections, under one GPU-hour.
+1. F1 at the specification's sample sizes for all six core schemes (100 watermarked, 200 unwatermarked, 100 real per scheme), which also enables the 1 percent false-positive operating point. About 400 generations and detections per scheme, under one GPU-hour each.
 1. F2: imprint forgery under C1 for all six core schemes, 10 covers each, at fixed step budgets of 50, 100, and 150, about 12 GPU-hours total.
 1. F3: resistance to removal under JPEG, blur, crop-and-scale, and diffusion purification, 100 watermarked images per scheme and attack.
 1. Then T1: the same forgery with Stable Diffusion 1.5 as the attacker.
