@@ -79,3 +79,43 @@ def test_main_writes_all_outputs(run_dir, capsys):
     assert (run_dir / "trajectories.png").exists()
     assert (run_dir / "grid.png").exists()
     assert "| TR " in capsys.readouterr().out
+
+
+def test_per_cover_table(run_dir):
+    text = report.per_cover_markdown(report.load(run_dir / "runs.csv"))
+    line = next(line for line in text.splitlines() if line.startswith("| Tree-Ring "))
+    assert "5/5 = 100% [57%, 100%]" in line
+    assert "20 (20 to 20)" in line
+    assert "25.0 dB (25.0 to 25.0)" in line
+
+
+def test_per_cover_counts_resisting_cover_at_its_last_step(tmp_path):
+    log = RunLog(tmp_path / "runs.csv")
+    common = dict(condition="C1", attack="imprint", psnr=20.0, ssim=0.5, lpips=0.3)
+    log.append(_row("imprint", "GS", "1", "forged", step=10, raw_score=0.9, is_watermarked=1, **common))
+    log.append(_row("imprint", "GS", "2", "forged", step=10, raw_score=0.5, is_watermarked=0, **common))
+    log.append(_row("imprint", "GS", "2", "forged", step=30, raw_score=0.6, is_watermarked=0, **common))
+    rows = report.per_cover(report.load(tmp_path / "runs.csv"))
+    assert rows[0]["Covers forged"] == "1/2 = 50% [9%, 91%]"
+    assert rows[0]["Stop step, median (range)"] == "20 (10 to 30)"
+
+
+def test_per_cover_of_log_without_imprint(tmp_path):
+    log = RunLog(tmp_path / "runs.csv")
+    log.append(_row("clean", "TR", "prompt0000", "watermarked", raw_score=10.0, is_watermarked=1))
+    assert report.per_cover_markdown(report.load(tmp_path / "runs.csv")) == "No imprint rows in run log.\n"
+
+
+def test_combine_runs_takes_one_scheme_per_source(run_dir):
+    df = report.load(run_dir / "runs.csv")
+    combined = report.combine_runs([("TR", df), ("GS", df), ("TR", df.iloc[0:0])])
+    assert set(combined.scheme) == {"TR", "GS"}
+    assert len(combined[combined.scheme == "TR"]) == len(df[df.scheme == "TR"])
+    assert report.combine_runs([]).empty
+
+
+def test_combine_runs_can_take_one_stage_from_a_source(run_dir):
+    df = report.load(run_dir / "runs.csv")
+    combined = report.combine_runs([("TR", df, ["clean", "real"]), ("TR", df.iloc[0:0], ["imprint"])])
+    assert set(combined.stage) == {"clean", "real"}
+    assert len(combined) == len(df[(df.scheme == "TR") & (df.stage != "imprint")])
