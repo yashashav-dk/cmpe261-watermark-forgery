@@ -17,7 +17,14 @@ from wmforge.metrics import wilson_interval  # noqa: E402
 
 # Default decision thresholds on the raw detector score, from MarkDiffusion's TR.json and GS.json.
 DEFAULT_THRESHOLDS = {"TR": 50.0, "GS": 0.7}
-SCHEME_NAMES = {"TR": "Tree-Ring", "GS": "Gaussian Shading"}
+SCHEME_NAMES = {
+    "TR": "Tree-Ring",
+    "GS": "Gaussian Shading",
+    "RI": "Ring-ID",
+    "SFW": "SFW",
+    "WIND": "WIND",
+    "PRC": "PRC",
+}
 SCORE_LABELS = {"TR": "L1 distance to watermark key", "GS": "Bit accuracy"}
 
 SURFACE = "#fcfcfb"
@@ -82,6 +89,66 @@ def summary_markdown(df: pd.DataFrame) -> str:
     lines = ["| " + " | ".join(headers) + " |", "|" + "|".join("---" for _ in headers) + "|"]
     lines += ["| " + " | ".join(row[header] for header in headers) + " |" for row in rows]
     return "\n".join(lines) + "\n"
+
+
+def per_cover(df: pd.DataFrame) -> list[dict]:
+    """One row per scheme: how many covers were forged, and the step and PSNR at which each run stopped.
+
+    A cover counts as forged if any detector check flagged it. The stop step is the first flagged
+    step for a forged cover and the last step run for one that resisted. Medians and ranges are
+    over covers, so the table reads the same whether a run stopped at first detection or at a cap.
+    """
+    rows = []
+    forged_rows = df[(df.stage == "imprint") & (df.kind == "forged")]
+    for scheme in sorted(forged_rows.scheme.unique()):
+        group = forged_rows[forged_rows.scheme == scheme].sort_values("step")
+        flagged, stop_steps, stop_psnr = [], [], []
+        for _, cover in group.groupby("image_id"):
+            hits = cover[cover.is_watermarked == 1]
+            stop = hits.iloc[0] if not hits.empty else cover.iloc[-1]
+            flagged.append(not hits.empty)
+            stop_steps.append(int(stop.step))
+            stop_psnr.append(float(stop.psnr))
+        steps, psnrs = pd.Series(stop_steps), pd.Series(stop_psnr)
+        rows.append(
+            {
+                "Scheme": SCHEME_NAMES.get(scheme, scheme),
+                "Covers forged": _rate(flagged),
+                "Stop step, median (range)": f"{steps.median():.0f} ({steps.min()} to {steps.max()})",
+                "PSNR at stop, median (range)": f"{psnrs.median():.1f} dB ({psnrs.min():.1f} to {psnrs.max():.1f})",
+            }
+        )
+    return rows
+
+
+def per_cover_markdown(df: pd.DataFrame) -> str:
+    rows = per_cover(df)
+    if not rows:
+        return "No imprint rows in run log.\n"
+    header = list(rows[0])
+    lines = ["| " + " | ".join(header) + " |", "|" + "---|" * len(header)]
+    lines += ["| " + " | ".join(str(row[key]) for key in header) + " |" for row in rows]
+    return "\n".join(lines) + "\n"
+
+
+def combine_runs(sources: list[tuple]) -> pd.DataFrame:
+    """Merge run logs so each scheme's rows come from named runs.
+
+    sources lists (scheme, frame) or (scheme, frame, stages) tuples; only the named scheme's rows,
+    optionally restricted to the listed stages, are taken from each frame. A scheme rerun in a later
+    log can therefore replace one stage of its earlier rows instead of being double counted.
+    """
+    parts = []
+    for source in sources:
+        scheme, frame = source[0], source[1]
+        stages = source[2] if len(source) > 2 else None
+        rows = frame[frame.scheme == scheme]
+        if stages:
+            rows = rows[rows.stage.isin(stages)]
+        parts.append(rows)
+    if not parts:
+        return pd.DataFrame()
+    return pd.concat(parts, ignore_index=True)
 
 
 def _style_axis(axis) -> None:
