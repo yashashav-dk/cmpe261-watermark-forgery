@@ -37,7 +37,7 @@ Check-in 1 delivered the finalized specification, the software pipeline, and a f
 - **Literature survey.** A survey of 16 papers covering the nine candidate schemes, the attacks the benchmark uses, and existing benchmarks, written up in Section 3.3. It settles the open question left in the specification about forgery evaluations of schemes other than Tree-Ring and Gaussian Shading.
 - **Approach and algorithm write-up.** Sections 4 and 5 describe the pipeline as built, the two protocol choices that were tried, and the forgery and detection algorithms as pseudo-code, so a reader can check the implementation against the papers.
 - **Repository documentation.** The project README now carries the findings so far and a status line against each floor commitment, and links the shared Drive folder.
-What has not moved: the clean baseline for the other four core schemes (F1) and the removal-resistance runs (F3) have not started. They are the next two items and are sized in Section 8.
+What the Check-in 2 work added: completed F1 clean and real-photo baselines and F2 imprint forgery for all six core schemes at check-in scale (five covers, stop at first detection, 150-step cap). The removal-resistance runs (F3) have not started and are the next item.
 
 ## 3. Draft of the report
 
@@ -121,33 +121,25 @@ What the statistics do and do not support. Five covers per scheme separate "forg
 
 ## 7. Check-ins
 
-The repository has 21 commits on the main branch by all three members, merged through one reviewed pull request. Each commit adds one component, one fix, or one document. The list below is the git log.
+The repository has 29 commits on the main branch by all three members. Each commit adds one component, one fix, result, or document. The eleven commits since Check-in 1 are listed below; the earlier 18 built the Check-in 1 pipeline and are in the Check-in 1 report.
 
 | Date | Member | Commit |
 |---|---|---|
+| 2026-10-18 | Kanaka Sarat | docs: add Check-in 2 report |
+| 2026-10-16 | Kanaka Sarat | feat: add script that draws the Check-in 2 figures from the run logs |
+| 2026-10-14 | Yashashav | docs: update README findings and status for Check-in 2 |
+| 2026-10-13 | Yashashav | results: add Check-in 2 figures across the six core schemes |
+| 2026-10-11 | Latha | results: Check-in 2 baselines and imprint forgery for RI, SFW, WIND, PRC |
+| 2026-10-10 | Latha | feat: add Check-in 2 Colab notebook with run outputs |
+| 2026-10-05 | Kanaka Sarat | docs: list member IDs and emails in check-in 2 |
+| 2026-10-05 | Kanaka Sarat | docs: add check-in 2 with literature survey, approach, and algorithms |
 | 2026-10-02 | Yashashav | docs: link the shared Drive folder in the README |
 | 2026-10-02 | Latha | docs: report findings so far in the README; add 150-step follow-up to check-in 1 |
 | 2026-10-02 | Yashashav | results: add Tree-Ring imprint run with a 150-step cap |
-| 2026-10-01 | Kanaka Sarat | docs: address the team in the check-in 1 plan |
-| 2026-10-01 | Latha | docs: reword plan instructions |
-| 2026-10-01 | Yashashav | docs: simplify commit commands in the check-in 1 plan |
-| 2026-10-01 | Kanaka Sarat | Merge check-in 1: specification, forgery harness, first results (#1) |
-| 2026-10-01 | Latha | docs: add check-in 1 write-up and project README |
-| 2026-10-01 | Yashashav | results: add check-in 1 run outputs |
-| 2026-10-01 | Kanaka Sarat | fix: keep imprint resume consistent with the log; optional Drive output |
-| 2026-10-01 | Latha | fix: run target pipeline in fp32; drop stale torchaudio on Colab |
-| 2026-10-01 | Yashashav | feat: add Colab notebook for the check-in 1 run |
-| 2026-10-01 | Kanaka Sarat | feat: add run report with summary table and figures |
-| 2026-10-01 | Latha | feat: add check-in 1 experiment runner |
-| 2026-10-01 | Yashashav | feat: add imprint forgery attack |
-| 2026-10-01 | Kanaka Sarat | feat: add MarkDiffusion harness with per-image seeding |
-| 2026-10-01 | Latha | feat: add resumable CSV run log |
-| 2026-10-01 | Yashashav | feat: add seeded data selection and cover loading |
-| 2026-10-01 | Kanaka Sarat | feat: add package scaffold and metrics |
-| 2026-10-01 | Latha | docs: add project specification and check-in 1 plan |
-| 2026-10-01 | Yashashav | Add README with project title and team |
 
-Commits per member: Yashashav 8, Latha 7, Kanaka Sarat 6. Member responsibilities are unchanged from the specification: Kanaka Sarat Siripurapu owns metrics, statistics, and the provenance layer; Latha Boralingaiah owns the attack implementation and transferability; Yashashav Devalapalli Kamalraj owns the generation harness and environment.
+The 18 commits before these (2026-10-01) built the Check-in 1 pipeline; they are listed in the Check-in 1 report.
+
+Commits per member in total: Kanaka Sarat 10, Yashashav 10, Latha 9.
 
 ## 8. Next steps and risks
 
