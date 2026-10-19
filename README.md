@@ -27,7 +27,7 @@ Full table with intervals and the per-cover breakdown: [`results/figures/summary
 
 *Detector score for each cover photograph as the imprint proceeds for the two Check-in 1 schemes. Step 0 is the untouched photograph; a filled marker means the detector flagged the image as watermarked.*
 
-Method, limits, cost, and problems found: [`docs/checkin-1.md`](docs/checkin-1.md) and [`docs/checkin-2.md`](docs/checkin-2.md). Run logs: [`results/checkin1/`](results/checkin1/), [`results/tr150/`](results/tr150/), [`results/checkin2/`](results/checkin2/).
+Method, limits, cost, and problems found: [`docs/checkin-1.md`](docs/checkin-1.md), [`docs/checkin-2.md`](docs/checkin-2.md), and the Check-in 2 report [`docs/CMPE261_CheckIn2_Group6.pdf`](docs/CMPE261_CheckIn2_Group6.pdf). Run logs: [`results/checkin1/`](results/checkin1/), [`results/tr150/`](results/tr150/), [`results/checkin2/`](results/checkin2/).
 
 ## Status
 
@@ -54,6 +54,7 @@ Shared Google Drive folder (team, instructor, and TA have access): [CMPE261 Grou
 | [`docs/project-spec.md`](docs/project-spec.md) | Finalized specification, tentative abstract, report outline |
 | [`docs/checkin-1.md`](docs/checkin-1.md) | Data exploration, first results, 150-step follow-up |
 | [`docs/checkin-2.md`](docs/checkin-2.md) | Literature survey, approach, algorithms, draft report sections, check-in log |
+| [`docs/CMPE261_CheckIn2_Group6.pdf`](docs/CMPE261_CheckIn2_Group6.pdf) | Check-in 2 report: baselines and forgery for all six core schemes |
 | [`data/README.md`](data/README.md) | Data sources and committed selections |
 
 ## Layout
