@@ -7,3 +7,5 @@ __pycache__/
 data/.cache/
 results/**/images/
 results/dryrun/
+Check_in_2.zip
+zip_contents/
