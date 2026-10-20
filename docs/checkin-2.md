@@ -23,7 +23,7 @@ The instructor and the TA were invited to the repository and the Drive folder be
 | Literature survey (recommended) | Done, first draft | Section 3.3 |
 | Approach (required) | Done: full pipeline built and run end to end; two protocol variants compared | Section 4 |
 | Algorithms (recommended) | Done: forgery attack and two detectors implemented and described | Section 5 |
-| Meaningful check-ins (required) | 21 commits by three members, 6 by Kanaka Sarat Siripurapu | Section 7 and the repository history |
+| Meaningful check-ins (required) | 29 commits by three members, 11 since Check-in 1 | Section 7 and the repository history |
 | Repository link in the report (required) | Done | Top of this document |
 | Initial report draft (recommended) | Sections 3 to 6 are the draft of report sections 1 to 6 | This document; docs/ in the repository |
 
@@ -104,7 +104,7 @@ Input: cover image c, watermarked reference r, attacker pipeline (VAE, UNet, DDI
 
 ## 6. Results so far
 
-Target: Stable Diffusion 2.1-base, 512 by 512, 50 sampling steps, guidance 7.5, full precision. Attacker: the same model (condition C1). 50 prompts, 50 COCO val2017 photographs, and 5 cover photographs per scheme, stop at first detection, cap 60 steps for Gaussian Shading and 150 for the rest. Gaussian Shading and Tree-Ring ran on an RTX PRO 6000 (Check-in 1, Tree-Ring rerun at 150 steps), the other four on an A100 on 2026-10-19. Brackets are 95 percent Wilson intervals. The table is produced by `scripts/combined_summary.py` from the three committed run logs and saved as `results/figures/summary_six_schemes.md`.
+Target: Stable Diffusion 2.1-base, 512 by 512, 50 sampling steps, guidance 7.5, full precision. Attacker: the same model (condition C1). 50 prompts, 50 COCO val2017 photographs, and 5 cover photographs per scheme, stop at first detection, cap 60 steps for Gaussian Shading and 150 for the rest. Gaussian Shading and Tree-Ring ran on an RTX PRO 6000 (Check-in 1, Tree-Ring rerun at 150 steps), the other four on an A100 for Check-in 2. Brackets are 95 percent Wilson intervals. The table is produced by `scripts/combined_summary.py` from the three committed run logs and saved as `results/figures/summary_six_schemes.md`.
 
 | Scheme | TPR watermarked | FPR unwatermarked | FPR real photos | Covers forged | Stop step, median (range) | PSNR at stop, median (range) |
 |---|---|---|---|---|---|---|
@@ -136,8 +136,6 @@ The repository has 29 commits on the main branch by all three members. Each comm
 | 2026-10-02 | Yashashav | docs: link the shared Drive folder in the README |
 | 2026-10-02 | Latha | docs: report findings so far in the README; add 150-step follow-up to check-in 1 |
 | 2026-10-02 | Yashashav | results: add Tree-Ring imprint run with a 150-step cap |
-
-The 18 commits before these (2026-10-01) built the Check-in 1 pipeline; they are listed in the Check-in 1 report.
 
 Commits per member in total: Kanaka Sarat 10, Yashashav 10, Latha 9.
 
