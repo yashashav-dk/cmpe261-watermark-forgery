@@ -10,7 +10,7 @@ All six core semantic schemes on Stable Diffusion 2.1-base, attacked with the pr
 
 | Scheme | Clean detection: TPR / FPR generated / FPR real photos | Forged | Steps to first detection (median) | PSNR of forgeries (median) |
 |---|---|---|---|---|
-| Gaussian Shading | 50/50 / 0/50 / 0/50 | 5/5 | 10 | 27.5 dB (mean) |
+| Gaussian Shading | 50/50 / 0/50 / 0/50 | 5/5 | 10 | 28.6 dB |
 | PRC | 50/50 / 0/50 / 0/50 | 5/5 | 20 | 27.7 dB |
 | WIND | 50/50 / 0/50 / 0/50 | 5/5 | 30 | 27.0 dB |
 | Ring-ID | 49/50 / 0/50 / 0/50 | 5/5 | 70 | 26.0 dB |
