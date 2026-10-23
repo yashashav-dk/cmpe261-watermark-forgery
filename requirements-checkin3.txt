@@ -1,0 +1,19 @@
+# Python 3.12; Linux CUDA worker. Install torch from the cu128 wheel index first.
+torch==2.10.0
+torchvision==0.25.0
+diffusers==0.40.0
+transformers==5.17.0
+accelerate==1.15.0
+numpy==2.1.3
+pillow==11.3.0
+pandas==2.2.3
+matplotlib==3.10.0
+scikit-image==0.25.2
+requests==2.32.4
+pyarrow==23.0.1
+scipy==1.16.3
+lpips==0.1.4
+qrcode==8.2
+galois==0.4.10
+ldpc==1.9.0
+markdiffusion @ git+https://github.com/THU-BPM/MarkDiffusion@9d81656d1a5f9e5194fc2f727bb795ef29e53809
