@@ -10,6 +10,7 @@
 # terms of the GNU General Public License, version 3, as published by the Free
 # Software Foundation. It is distributed WITHOUT ANY WARRANTY; see LICENSE.
 """Imprint forgery: move a cover image's inverted latent onto a watermarked reference's."""
+
 from __future__ import annotations
 
 import time
@@ -54,14 +55,25 @@ def make_attacker(pipe, inverse_scheduler, num_inversion_steps: int = 50) -> Att
 
 
 def load_attacker(
-    model_id: str, revision: Optional[str] = None, device: str = "cuda", num_inversion_steps: int = 50
+    model_id: str,
+    revision: Optional[str] = None,
+    device: str = "cuda",
+    num_inversion_steps: int = 50,
 ) -> Attacker:
     from diffusers import DDIMInverseScheduler, DDIMScheduler, StableDiffusionPipeline
 
-    scheduler = DDIMScheduler.from_pretrained(model_id, subfolder="scheduler", revision=revision)
-    inverse = DDIMInverseScheduler.from_pretrained(model_id, subfolder="scheduler", revision=revision)
+    scheduler = DDIMScheduler.from_pretrained(
+        model_id, subfolder="scheduler", revision=revision
+    )
+    inverse = DDIMInverseScheduler.from_pretrained(
+        model_id, subfolder="scheduler", revision=revision
+    )
     pipe = StableDiffusionPipeline.from_pretrained(
-        model_id, revision=revision, scheduler=scheduler, safety_checker=None, torch_dtype=torch.float32
+        model_id,
+        revision=revision,
+        scheduler=scheduler,
+        safety_checker=None,
+        torch_dtype=torch.float32,
     ).to(device)
     pipe.set_progress_bar_config(disable=True)
     return make_attacker(pipe, inverse, num_inversion_steps)
@@ -71,7 +83,12 @@ def encode(attacker: Attacker, image: Image.Image) -> torch.Tensor:
     """Image to scaled VAE latent (posterior mean)."""
     pipe = attacker.pipe
     pixels = np.asarray(image.convert("RGB"), dtype=np.float32) / 127.5 - 1.0
-    batch = torch.from_numpy(pixels).permute(2, 0, 1).unsqueeze(0).to(device=pipe.device, dtype=pipe.vae.dtype)
+    batch = (
+        torch.from_numpy(pixels)
+        .permute(2, 0, 1)
+        .unsqueeze(0)
+        .to(device=pipe.device, dtype=pipe.vae.dtype)
+    )
     with torch.no_grad():
         latent = pipe.vae.encode(batch).latent_dist.mean
     return latent * pipe.vae.config.scaling_factor
@@ -80,7 +97,9 @@ def encode(attacker: Attacker, image: Image.Image) -> torch.Tensor:
 def decode(attacker: Attacker, latents: torch.Tensor) -> Image.Image:
     pipe = attacker.pipe
     with torch.no_grad():
-        decoded = pipe.vae.decode(latents.detach() / pipe.vae.config.scaling_factor, return_dict=False)[0]
+        decoded = pipe.vae.decode(
+            latents.detach() / pipe.vae.config.scaling_factor, return_dict=False
+        )[0]
     pixels = (decoded[0] * 0.5 + 0.5).clamp(0, 1).permute(1, 2, 0).cpu().numpy()
     return Image.fromarray((pixels * 255).round().astype(np.uint8))
 
@@ -91,25 +110,39 @@ def _empty_prompt_embeds(attacker: Attacker) -> torch.Tensor:
     return embeds
 
 
-def invert(attacker: Attacker, z0: torch.Tensor, prompt_embeds: torch.Tensor, differentiable: bool = False) -> torch.Tensor:
+def invert(
+    attacker: Attacker,
+    z0: torch.Tensor,
+    prompt_embeds: torch.Tensor,
+    differentiable: bool = False,
+) -> torch.Tensor:
     """DDIM-invert a clean latent to noise with an empty prompt and no guidance."""
     scheduler = attacker.inverse_scheduler
     scheduler.set_timesteps(attacker.num_inversion_steps, device=z0.device)
     unet = attacker.pipe.unet
 
     def predict_noise(sample, timestep):
-        return unet(sample, timestep, encoder_hidden_states=prompt_embeds, return_dict=False)[0]
+        return unet(
+            sample, timestep, encoder_hidden_states=prompt_embeds, return_dict=False
+        )[0]
 
     latents = z0
     for timestep in scheduler.timesteps:
         model_input = scheduler.scale_model_input(latents, timestep)
         if differentiable:
             # Recompute each UNet call on the backward pass instead of storing its activations.
-            noise = checkpoint(predict_noise, model_input, timestep, use_reentrant=False)
+            noise = checkpoint(
+                predict_noise, model_input, timestep, use_reentrant=False
+            )
         else:
             noise = predict_noise(model_input, timestep)
         latents = scheduler.step(noise, timestep, latents, return_dict=False)[0]
     return latents
+
+
+def _synchronize(device):
+    if device.type == "cuda":
+        torch.cuda.synchronize(device)
 
 
 def imprint(
@@ -130,7 +163,9 @@ def imprint(
     max_steps; returning True stops the run.
     """
     if cover.size != reference.size:
-        raise ValueError(f"cover and reference sizes differ: {cover.size} vs {reference.size}")
+        raise ValueError(
+            f"cover and reference sizes differ: {cover.size} vs {reference.size}"
+        )
     if max_steps < 1:
         raise ValueError("max_steps must be at least 1")
     if validate_every < 1:
@@ -138,17 +173,25 @@ def imprint(
 
     if checkpoint_path is not None and (measure is None or publish is None):
         raise ValueError("checkpointed optimization requires measure and publish")
-    settings = dict(max_steps=max_steps, lr=lr, validate_every=validate_every,
-                    cover=__import__('hashlib').sha256(cover.tobytes()).hexdigest(),
-                    reference=__import__('hashlib').sha256(reference.tobytes()).hexdigest())
+    settings = dict(
+        max_steps=max_steps,
+        lr=lr,
+        validate_every=validate_every,
+        cover=__import__("hashlib").sha256(cover.tobytes()).hexdigest(),
+        reference=__import__("hashlib").sha256(reference.tobytes()).hexdigest(),
+    )
     saved = None
     if checkpoint_path is not None and Path(checkpoint_path).exists():
-        saved = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
-        if saved['settings'] != settings:
+        saved = torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+        if saved["settings"] != settings:
             raise ValueError("checkpoint settings differ; refusing resume")
     embeds = _empty_prompt_embeds(attacker)
     with torch.no_grad():
-        target = saved["target"].to(encode(attacker, cover).device) if saved else invert(attacker, encode(attacker, reference), embeds)
+        target = (
+            saved["target"].to(encode(attacker, cover).device)
+            if saved
+            else invert(attacker, encode(attacker, reference), embeds)
+        )
     z0 = torch.nn.Parameter(encode(attacker, cover).clone())
     optimizer = torch.optim.Adam([z0], lr=lr)
 
@@ -158,43 +201,63 @@ def imprint(
     step = 0
     if saved:
         with torch.no_grad():
-            z0.copy_(saved['latent'])
-        optimizer.load_state_dict(saved['optimizer'])
-        records = saved['records']
-        optim_seconds = saved['seconds']
-        step = saved['step']
-        publish(saved['measurement'], saved['image'])
-        random.setstate(saved['python_rng'])
-        np.random.set_state(saved['numpy_rng'])
-        torch.set_rng_state(saved['torch_rng'])
-        if saved['cuda_rng'] is not None:
-            torch.cuda.set_rng_state_all(saved['cuda_rng'])
+            z0.copy_(saved["latent"])
+        optimizer.load_state_dict(saved["optimizer"])
+        records = saved["records"]
+        optim_seconds = saved["seconds"]
+        step = saved["step"]
+        publish(saved["measurement"], saved["image"])
+        random.setstate(saved["python_rng"])
+        np.random.set_state(saved["numpy_rng"])
+        torch.set_rng_state(saved["torch_rng"])
+        if saved["cuda_rng"] is not None:
+            torch.cuda.set_rng_state_all(saved["cuda_rng"])
     for step in range(step + 1, max_steps + 1):
+        _synchronize(z0.device)
         started = time.perf_counter()
         optimizer.zero_grad()
-        loss = torch.nn.functional.mse_loss(invert(attacker, z0, embeds, differentiable=True), target)
+        loss = torch.nn.functional.mse_loss(
+            invert(attacker, z0, embeds, differentiable=True), target
+        )
         if not torch.isfinite(loss):
             raise RuntimeError(f"imprint loss is not finite at step {step}")
         loss.backward()
         optimizer.step()
+        _synchronize(z0.device)
         elapsed = time.perf_counter() - started
         optim_seconds += elapsed
         records.append(StepRecord(step, float(loss.item()), elapsed))
-        if checkpoint_path is not None and (step % validate_every == 0 or step == max_steps):
+        if checkpoint_path is not None and (
+            step % validate_every == 0 or step == max_steps
+        ):
             from wmforge.benchmark import atomic_bytes
+
             image = decode(attacker, z0)
             row = measure(step, image, optim_seconds)
-            snapshot = dict(settings=settings, step=step, latent=z0.detach().cpu(),
-                            target=target.detach().cpu(), optimizer=optimizer.state_dict(),
-                            records=records, seconds=optim_seconds, image=image, measurement=row,
-                            python_rng=random.getstate(), numpy_rng=np.random.get_state(),
-                            torch_rng=torch.get_rng_state(),
-                            cuda_rng=torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None)
+            snapshot = dict(
+                settings=settings,
+                step=step,
+                latent=z0.detach().cpu(),
+                target=target.detach().cpu(),
+                optimizer=optimizer.state_dict(),
+                records=records,
+                seconds=optim_seconds,
+                image=image,
+                measurement=row,
+                python_rng=random.getstate(),
+                numpy_rng=np.random.get_state(),
+                torch_rng=torch.get_rng_state(),
+                cuda_rng=torch.cuda.get_rng_state_all()
+                if torch.cuda.is_available()
+                else None,
+            )
             payload = io.BytesIO()
             torch.save(snapshot, payload)
             atomic_bytes(checkpoint_path, payload.getvalue())
             publish(row, image)
-        if on_validate is not None and (step % validate_every == 0 or step == max_steps):
+        if on_validate is not None and (
+            step % validate_every == 0 or step == max_steps
+        ):
             if on_validate(step, decode(attacker, z0), optim_seconds):
                 stopped_early = True
                 break

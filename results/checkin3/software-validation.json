@@ -1,0 +1,46 @@
+{
+  "checked_at_utc": "2026-10-24T00:44:21.901627+00:00",
+  "source_main": "cd70d602c8eb59749c93ef92995db3b3a831262e",
+  "environment": {
+    "python": "3.12.13",
+    "torch": "2.10.0",
+    "diffusers": "0.40.0",
+    "platform": "macOS arm64",
+    "cuda": false
+  },
+  "test_suite": {
+    "passed": 95,
+    "failed": 0,
+    "skipped": 0,
+    "warnings": 3,
+    "includes_cached_tiny_diffusion_model": true,
+    "command": "HF_HUB_OFFLINE=1 PYTHONPATH=src OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 .venv/bin/python -m pytest -q"
+  },
+  "lint": "passed",
+  "diff_check": "passed",
+  "notebook_python_syntax": "passed",
+  "dataset": {
+    "prompts": 200,
+    "photographs": 100,
+    "seed": 261,
+    "preserved_prefix_each": 50,
+    "hashes_verified": true
+  },
+  "pinned_toolkit_pixel_comparison": {
+    "jpeg": "exact match",
+    "blur": "exact match",
+    "crop": "exact match"
+  },
+  "recovery_boundaries": [
+    "before checkpoint",
+    "before image",
+    "after image",
+    "after log"
+  ],
+  "gpu_preflight": "pending",
+  "full_F1": "pending",
+  "full_F2": "pending",
+  "full_F3": "pending",
+  "current_access_check": "pending",
+  "actual_member_contribution_confirmation": "pending"
+}
