@@ -13,6 +13,9 @@
 from __future__ import annotations
 
 import time
+import io
+import random
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Callable, Optional
 
@@ -117,6 +120,9 @@ def imprint(
     lr: float = 1e-2,
     validate_every: int = 10,
     on_validate: Optional[Callable[[int, Image.Image, float], bool]] = None,
+    checkpoint_path=None,
+    measure=None,
+    publish=None,
 ) -> ImprintResult:
     """Optimize the cover's latent until its inverted noise matches the reference's.
 
@@ -130,9 +136,19 @@ def imprint(
     if validate_every < 1:
         raise ValueError("validate_every must be at least 1")
 
+    if checkpoint_path is not None and (measure is None or publish is None):
+        raise ValueError("checkpointed optimization requires measure and publish")
+    settings = dict(max_steps=max_steps, lr=lr, validate_every=validate_every,
+                    cover=__import__('hashlib').sha256(cover.tobytes()).hexdigest(),
+                    reference=__import__('hashlib').sha256(reference.tobytes()).hexdigest())
+    saved = None
+    if checkpoint_path is not None and Path(checkpoint_path).exists():
+        saved = torch.load(checkpoint_path, map_location='cpu', weights_only=False)
+        if saved['settings'] != settings:
+            raise ValueError("checkpoint settings differ; refusing resume")
     embeds = _empty_prompt_embeds(attacker)
     with torch.no_grad():
-        target = invert(attacker, encode(attacker, reference), embeds)
+        target = saved["target"].to(encode(attacker, cover).device) if saved else invert(attacker, encode(attacker, reference), embeds)
     z0 = torch.nn.Parameter(encode(attacker, cover).clone())
     optimizer = torch.optim.Adam([z0], lr=lr)
 
@@ -140,7 +156,20 @@ def imprint(
     optim_seconds = 0.0
     stopped_early = False
     step = 0
-    for step in range(1, max_steps + 1):
+    if saved:
+        with torch.no_grad():
+            z0.copy_(saved['latent'])
+        optimizer.load_state_dict(saved['optimizer'])
+        records = saved['records']
+        optim_seconds = saved['seconds']
+        step = saved['step']
+        publish(saved['measurement'], saved['image'])
+        random.setstate(saved['python_rng'])
+        np.random.set_state(saved['numpy_rng'])
+        torch.set_rng_state(saved['torch_rng'])
+        if saved['cuda_rng'] is not None:
+            torch.cuda.set_rng_state_all(saved['cuda_rng'])
+    for step in range(step + 1, max_steps + 1):
         started = time.perf_counter()
         optimizer.zero_grad()
         loss = torch.nn.functional.mse_loss(invert(attacker, z0, embeds, differentiable=True), target)
@@ -151,6 +180,20 @@ def imprint(
         elapsed = time.perf_counter() - started
         optim_seconds += elapsed
         records.append(StepRecord(step, float(loss.item()), elapsed))
+        if checkpoint_path is not None and (step % validate_every == 0 or step == max_steps):
+            from wmforge.benchmark import atomic_bytes
+            image = decode(attacker, z0)
+            row = measure(step, image, optim_seconds)
+            snapshot = dict(settings=settings, step=step, latent=z0.detach().cpu(),
+                            target=target.detach().cpu(), optimizer=optimizer.state_dict(),
+                            records=records, seconds=optim_seconds, image=image, measurement=row,
+                            python_rng=random.getstate(), numpy_rng=np.random.get_state(),
+                            torch_rng=torch.get_rng_state(),
+                            cuda_rng=torch.cuda.get_rng_state_all() if torch.cuda.is_available() else None)
+            payload = io.BytesIO()
+            torch.save(snapshot, payload)
+            atomic_bytes(checkpoint_path, payload.getvalue())
+            publish(row, image)
         if on_validate is not None and (step % validate_every == 0 or step == max_steps):
             if on_validate(step, decode(attacker, z0), optim_seconds):
                 stopped_early = True
