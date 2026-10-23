@@ -41,6 +41,14 @@ Against the commitments in [`docs/project-spec.md`](docs/project-spec.md):
 
 Measured cost: 4.9 s per imprint step on one NVIDIA RTX PRO 6000 (Check-in 1); 8.4 s per imprint step and about 7 s per generation plus detection on one NVIDIA A100 40 GB (Check-in 2).
 
+## Check-in 3 implementation
+
+The full benchmark workflow is prepared in [`notebooks/03_checkin3_colab.ipynb`](notebooks/03_checkin3_colab.ipynb). It adds independent 100/200/100 baselines, strict empirical calibration, 150-step forgery with optimizer checkpoints, and four removal attacks. A successful six-scheme GPU preflight gates full execution. Check-in 3 measurements remain pending.
+
+The new dataset selections retain the original 50 prompts and photographs as exact prefixes. [`data/checkin3-selection.json`](data/checkin3-selection.json) records the source and selection hashes. Historical runs remain separate.
+
+Read [`docs/checkin-3.md`](docs/checkin-3.md) for the protocol and outstanding execution work, or open the [PDF draft](docs/Group6_CMPE261_CheckIn_3_draft.pdf). The draft labels absent results and unconfirmed contributions explicitly. The notebook can use the supplied source archive before branch publication; no publication is required to prepare or review the experiment.
+
 ## Team
 
 - Kanaka Sarat Siripurapu
