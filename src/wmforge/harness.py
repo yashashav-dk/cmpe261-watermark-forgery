@@ -1,4 +1,5 @@
 """Generation and detection through MarkDiffusion."""
+
 from __future__ import annotations
 
 import math
@@ -19,7 +20,7 @@ class SchemeInfo:
 
 
 # Score keys and directions read from MarkDiffusion's detectors at the pinned commit.
-# PRC's score direction is unverified; only its verdict is relied on.
+# PRC's log-plus sum increases with evidence; calibration remains a separate score-only test.
 SCHEMES = {
     "TR": SchemeInfo("l1_distance", False),
     "RI": SchemeInfo("l1_distance", False),
@@ -49,7 +50,9 @@ def parse_detection(scheme: str, result: dict) -> Detection:
     raw = float(result[info.score_key])
     if not math.isfinite(raw):
         raise ValueError(f"{scheme} detector score is not finite: {raw}")
-    return Detection(raw, raw if info.higher_is_watermarked else -raw, bool(result["is_watermarked"]))
+    return Detection(
+        raw, raw if info.higher_is_watermarked else -raw, bool(result["is_watermarked"])
+    )
 
 
 class Harness:
@@ -63,7 +66,9 @@ class Harness:
         detect_guidance_scale: Optional[float] = None,
     ) -> None:
         if scheme not in SCHEMES:
-            raise ValueError(f"unknown scheme {scheme!r}; known schemes: {sorted(SCHEMES)}")
+            raise ValueError(
+                f"unknown scheme {scheme!r}; known schemes: {sorted(SCHEMES)}"
+            )
         self.scheme = scheme
         self.watermark = watermark
         self._latent_sampler = latent_sampler
@@ -81,18 +86,26 @@ class Harness:
         kwargs = {}
         if self._detect_guidance_scale is not None:
             kwargs["guidance_scale"] = self._detect_guidance_scale
-        return parse_detection(self.scheme, self.watermark.detect_watermark_in_media(image, **kwargs))
+        return parse_detection(
+            self.scheme, self.watermark.detect_watermark_in_media(image, **kwargs)
+        )
 
 
 def load_target_pipe(model_id: str, revision: str, device: str):
     import torch
     from diffusers import DPMSolverMultistepScheduler, StableDiffusionPipeline
 
-    scheduler = DPMSolverMultistepScheduler.from_pretrained(model_id, subfolder="scheduler", revision=revision)
+    scheduler = DPMSolverMultistepScheduler.from_pretrained(
+        model_id, subfolder="scheduler", revision=revision
+    )
     # Full precision on every device: MarkDiffusion's Gaussian Shading builds float32 latents,
     # which a half-precision pipeline rejects.
     pipe = StableDiffusionPipeline.from_pretrained(
-        model_id, revision=revision, scheduler=scheduler, torch_dtype=torch.float32, safety_checker=None
+        model_id,
+        revision=revision,
+        scheduler=scheduler,
+        torch_dtype=torch.float32,
+        safety_checker=None,
     ).to(device)
     pipe.set_progress_bar_config(disable=True)
     return pipe
@@ -119,6 +132,8 @@ def build_harness(scheme: str, pipe, device: str) -> Harness:
 
     def sample_latents(seed: int):
         generator = torch.Generator(device=device).manual_seed(seed)
-        return get_random_latents(pipe, height=IMAGE_SIZE, width=IMAGE_SIZE, generator=generator)
+        return get_random_latents(
+            pipe, height=IMAGE_SIZE, width=IMAGE_SIZE, generator=generator
+        )
 
     return Harness(scheme, watermark, sample_latents)
