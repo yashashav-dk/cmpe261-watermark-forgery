@@ -20,3 +20,9 @@ Both were drawn with seed 261 by `scripts/select_data.py`. Line order is the sam
 To regenerate: `python scripts/select_data.py`. The script downloads the prompt file (1 MB) and the COCO annotation archive (253 MB) on first use.
 
 Cover photographs are centre-cropped to a square and resized to 512×512 RGB before use.
+
+## Check-in 3 extension
+
+`prompts_checkin3.txt` contains 200 unique prompts; `coco_val2017_checkin3.txt` contains 100 unique photograph identifiers. Both preserve the historical 50-item files as exact prefixes. The first ten photographs are the forgery covers, preserving the original five first. The extension samples from the sorted remaining pool with seed 261.
+
+`checkin3-selection.json` records the source pool hashes, selection hashes, prefix hashes, and counts. Regenerate with `python scripts/select_checkin3_data.py`; the script rejects different existing files. The annotation archive uses the official bucket's HTTPS endpoint to avoid insecure download restrictions.

@@ -8,10 +8,12 @@ Repository: https://github.com/yashashav-dk/cmpe261-watermark-forgery
 Team Drive: https://drive.google.com/drive/folders/1wkXOxPjfI648JPod1Fi2m9ItfrPvWVIT
 Deadline: November 3, 2026, 11:59 PM. Deliverable: PDF draft report.
 
-Draft status: implementation prepared; full Check-in 3 measurements are pending.
+Draft status (October 24): software and the six-scheme GPU pilot passed; the full
+serial Check-in 3 queue has started with F1 baselines. Full results are pending.
 Historical numbers below come from the corrected Check-in 2 report. They are not
-Check-in 3 results. GPU compatibility, complete measurements, actual team
-contributions, and access checks must be resolved before submission.
+Check-in 3 results. Complete measurements, actual team contributions, and the
+remaining GitHub access check must be resolved before submission. The team has
+confirmed equal contributions by all three members.
 
 ## 1. Updated abstract and report outline
 
@@ -78,18 +80,19 @@ Generation and inversion use 50 steps; generation guidance is 7.5. Both pipeline
 use float32. Imprint uses Adam at learning rate 0.01. The target retains the
 existing DPMSolverMultistep scheduler; the attacker uses DDIM inversion.
 
-The requested GPU stack is Python 3.12, Torch 2.10.0 with CUDA 12.8, and Diffusers
-0.40.0. The setup pins MarkDiffusion and supplies qrcode, galois, and ldpc below 2.
-Compatibility is a gate, not an assumed result. Capture the complete installed
-environment after successful import checks and pip check. Preserve the original
-run's environment on resume.
+The verified GPU stack is Python 3.12.15, Torch 2.10.0+cu128 with CUDA 12.8, and
+Diffusers 0.40.0. The setup pins MarkDiffusion and supplies qrcode, galois, and
+ldpc 0.1.60; the legacy PRC decoder import and pip check passed. The originally
+prepared ldpc 1.9.0 pin was unavailable and was corrected before the successful
+pilot. The complete installed environment is preserved on Drive and its package
+versions are recorded in results/checkin3/preflight-v1.json.
 
 A root manifest binds code hashes, environment, model/toolkit revisions, seeds,
 input identities and hashes, counts, attack settings, precision, and budgets.
 A per-scheme manifest binds the complete saved toolkit state, including keys and
 configuration. The state serializer rebinds shared pipeline components instead
 of storing duplicate model weights. Actual toolkit round trips require the GPU
-preflight; synthetic round trips alone are insufficient evidence.
+preflight; the successful GPU pilot verified these round trips for all six schemes.
 
 ## 4. Approach and algorithms
 
@@ -144,8 +147,9 @@ ratio 0.8, and pinned SD 2.1-base diffusion purification at strength 0.3 with an
 empty prompt. Seed stochastic transforms per image. Evaluate saved transformed
 artifacts. The pinned image_editor.py source was audited: crop resize uses Pillow’s
 default BICUBIC filter; purification uses the toolkit’s unguided
-DiffusionPurification editor. The GPU pilot remains required before claiming
-end-to-end reproduction.
+DiffusionPurification editor. The GPU pilot exercised all four saved-image
+transformations for all six schemes. These functional checks are separate from
+the 100-image removal experiment.
 
 Use Wilson 95% intervals for binary rates and percentile bootstrap intervals
 with 10,000 item resamples and seed 261 for mean continuous metrics. Report each
@@ -156,11 +160,16 @@ claim is justified merely by small numerical differences or overlapping plots.
 
 ## 6. Results and interpretation
 
-Check-in 3 full F1: pending, 0 of 6 schemes verified at 100 / 200 / 100.
+Check-in 3 full F1: running, 0 of 6 schemes verified at 100 / 200 / 100 at launch.
 Check-in 3 full F2: pending, 0 of 60 cover trajectories verified through 150 steps.
 Check-in 3 full F3: pending, 0 of 2,400 transformed images verified (before any
-native inclusion exclusions). Actual GPU cost and complete confidence intervals
-are pending. The executable report reads only the new versioned log and lists
+native inclusion exclusions). The pilot completed in 495.4 seconds on an NVIDIA
+RTX PRO 6000 Blackwell Server Edition. Mean imprint step times were 4.85-4.93
+seconds across schemes, projecting 12.22 GPU hours for the full 60-cover,
+150-step forgery workload. This estimate excludes full baseline and removal
+costs and is not a completed experiment's runtime. Peak allocated GPU memory
+was 14.30 GB. Complete confidence intervals remain pending.
+The executable report reads only the new versioned log and lists
 missing baseline, eligibility, and attack work explicitly.
 
 Historical comparison only, corrected Check-in 2: each scheme used 50 watermarked,
@@ -190,36 +199,47 @@ fixed-budget reversal, single-writer enforcement, immutable reference provenance
 and interruptions before and after checkpoint/log publication. An independent
 code review identified preflight evidence overwrite, hidden attack requirements,
 CUDA timer synchronization, and incomplete reference provenance; each received a
-regression test and a fix. Actual toolkit serialization and GPU execution remain
-unverified; do not interpret CPU tests as evidence of GPU correctness.
+regression test and a fix. The cloud suite also passed 89 tests, with six slow
+tests deselected. Actual toolkit serialization, 512-by-512 generation and removal
+artifacts, finite detector scores, quality metrics, and checkpoint publication
+replay passed the six-scheme GPU pilot. The pilot's ten-step trajectories do not
+replace the full fixed-budget experiments.
 
-The connected pilot session exposed a T4 with 15 GB GPU memory, Python 3.13, and
-initially no Drive mount. Drive was then mounted. The isolated Python 3.12 GPU
-stack and full six-scheme pilot have not completed. No lower precision, reduced
+The dedicated SJSU Colab session allocated an RTX PRO 6000 GPU with approximately
+102 GB of device memory. Its notebook kernel uses Python 3.13; experiments run
+in the isolated Python 3.12.15 environment. The project Drive save/reopen check
+passed. Colab replaced the VM after the successful pilot. Restoring from the
+captured freeze initially installed an unrelated public package with the project
+name and introduced one extra dependency. The consistency gate rejected that
+environment. Installing the repository source and removing the extra dependency
+restored an exact match to the pilot's package versions and source hashes.
+Full F1 began October 24 at 22:01 UTC, with all 100 input snapshots saved.
+The serial supervisor records the VM boot identity, stage status, dated logs,
+and durable measurement counts every 30 seconds. No lower precision, reduced
 sample count, weaker attack, or shorter optimization budget is authorized as an
 automatic workaround. Preserve partial progress and report outstanding work.
 
-Use approximately nine meaningful implementation and report commits, allocated
-three per repository member as requested by the team. Commit attribution follows
-the existing repository identities. This allocation is not a statement of each
-member's personally completed tasks. Commit timestamps are intentionally spaced
-2.5 hours apart for presentation and do not measure elapsed work. Before submission, each member must confirm
-their actual implementation, experiment, analysis, and writing contributions.
-The nine task commits rotate in this order: (1) Kanaka Sarat — versioned
-measurements and calibration; (2) Latha — optimizer checkpoint recovery;
-(3) Yashashav — reproducibility setup and key state; (4) Kanaka Sarat —
-fixed-budget runner; (5) Latha — exact-budget reporting; (6) Yashashav —
-GPU preflight and recovery verification; (7) Kanaka Sarat — Colab driver;
-(8) Latha — report draft; (9) Yashashav — frozen dataset selections.
+The team confirms equal contributions: Kanaka Sarat Siripurapu, Latha
+Boralingaiah, and Yashashav Devalapalli Kamalraj each receive one-third credit.
+Implementation, experiment execution, interpretation, and writing are joint
+work. For coordination, the responsibility areas are divided evenly: Kanaka
+Sarat coordinates detector metrics, calibration/statistics, and measurement
+provenance; Latha coordinates imprint optimization, checkpoint recovery, and
+forgery/removal validation; Yashashav coordinates the runtime environment,
+generation/data preparation, and reproducible execution. These coordination
+roles do not imply exclusive authorship of individual files or experiments.
 
-Previous responsibilities were metrics/statistics/provenance (Kanaka Sarat),
-attack implementation/transferability (Latha), and generation/environment
-(Yashashav); these remain responsibilities rather than verified new contributions.
+The repository separates nine completed software milestones covering logging,
+checkpointing, saved keys, benchmark execution, reporting, GPU preflight,
+the Colab notebook, the draft report, and frozen input selections. Commit
+timestamps are adjusted metadata and do not measure elapsed work. Full result
+and final report milestones remain pending while the experiments run.
 
-The corrected Check-in 2 report states that the instructor and TA were invited to
-GitHub and Drive before Check-in 1. Current access has not been reverified.
-Missing invitations need the account owner's help. Do not claim a new access
-check has passed based solely on that historical statement.
+The Drive sharing dialog was checked on October 24. It lists all three team
+members and Editor access for instructor Bertin Cordova Diba and TA Charan Sai
+Gandham; the team confirmed those roles. The corrected Check-in 2 report states that the
+instructor and TA were also invited to GitHub before Check-in 1; current GitHub
+access has not been reverified. Missing invitations need the account owner's help.
 
 October 24–25: environment, persistence, and GPU pilot. October 26–28: full F1/F2.
 October 29–30: full F3 and completeness audit. October 31–November 1: analysis,
@@ -255,7 +275,3 @@ Pilot: python -m wmforge.preflight --out PILOT_DIR.
 Full run: python -m wmforge.checkin3 --out RUN_DIR --preflight PILOT_DIR/preflight.json.
 Summary: python -m wmforge.checkin3_report --run RUN_DIR.
 PDF: python scripts/checkin3_draft.py --out docs/Group6_CMPE261_CheckIn_3_draft.pdf.
-
-The full run must use the compatibility-checked CUDA environment. Source, input
-selection, key state, checkpoints, artifacts, calibration, and summary together
-form the reproduction record. Never publish private watermark keys by accident.

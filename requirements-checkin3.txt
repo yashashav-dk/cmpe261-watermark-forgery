@@ -15,5 +15,5 @@ scipy==1.16.3
 lpips==0.1.4
 qrcode==8.2
 galois==0.4.10
-ldpc==1.9.0
+ldpc==0.1.60
 markdiffusion @ git+https://github.com/THU-BPM/MarkDiffusion@9d81656d1a5f9e5194fc2f727bb795ef29e53809
