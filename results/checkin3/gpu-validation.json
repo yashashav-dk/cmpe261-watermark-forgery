@@ -1,0 +1,56 @@
+{
+  "checked_at_utc": "2026-10-24T22:12:58.539216+00:00",
+  "pilot": "preflight-v1.json",
+  "pilot_passed": true,
+  "gpu": "NVIDIA RTX PRO 6000 Blackwell Server Edition",
+  "python": "3.12.15",
+  "torch": "2.10.0+cu128",
+  "cuda": "12.8",
+  "diffusers": "0.40.0",
+  "ldpc": "0.1.60",
+  "schemes": [
+    "GS",
+    "PRC",
+    "RI",
+    "SFW",
+    "TR",
+    "WIND"
+  ],
+  "removals": [
+    "blur",
+    "crop",
+    "jpeg",
+    "purification"
+  ],
+  "key_roundtrip_all": true,
+  "checkpoint_replay_all": true,
+  "generation_and_removal_dimensions": [
+    512,
+    512
+  ],
+  "drive_save_reopen": true,
+  "source_and_environment_restored_exactly": true,
+  "cloud_tests": {
+    "passed": 89,
+    "failed": 0,
+    "slow_deselected": 6
+  },
+  "elapsed_pilot_seconds": 495.4317450489998,
+  "projected_imprint_hours": 12.219346177791673,
+  "full_queue": {
+    "baseline": "running",
+    "imprint": "queued",
+    "removal": "queued",
+    "started_utc": "2026-10-24T22:01:04.084965+00:00"
+  },
+  "access": {
+    "drive_instructor_and_ta": "Editor access verified; course roles confirmed by team",
+    "github": "not reverified"
+  },
+  "contributions": "Team confirms equal contributions, one-third per member",
+  "limitations": [
+    "Pilot images do not enter full benchmark results",
+    "Projection excludes full baseline and removal costs",
+    "Full results and final report remain pending"
+  ]
+}
