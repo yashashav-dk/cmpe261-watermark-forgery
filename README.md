@@ -4,50 +4,41 @@ CMPE 261 (Generative AI), San José State University, Fall 2026. Team project.
 
 Semantic watermarks for diffusion models are tested almost entirely against removal. This project measures the opposite failure: how often an attacker can make an innocent real photograph verify as watermarked.
 
-## Findings so far
+## Findings so far (Check-in 3)
 
-All six core semantic schemes on Stable Diffusion 2.1-base, attacked with the provider's own model (the strongest case), five real COCO photographs per scheme, 150-step cap, detector checked every 10 steps. The attack is the imprint forgery of Müller et al. (CVPR 2025): optimize the photograph until its inverted noise matches that of a watermarked image.
+All six core semantic schemes on Stable Diffusion 2.1-base, at full size: 100 watermarked, 200 unwatermarked and 100 real COCO images per scheme for the baselines; imprint forgery (Mueller et al., CVPR 2025) with the provider's own model on ten real photographs per scheme, run to a fixed 150-step budget and scored at steps 50, 100 and 150; and four removal attacks on 100 watermarked images per scheme. Every result is given at the toolkit's native threshold and at a threshold calibrated to 1% false positives on the 200 unwatermarked images. 5,700 measurements in [`results/checkin3/full/`](results/checkin3/full/).
 
-| Scheme | Clean detection: TPR / FPR generated / FPR real photos | Forged | Steps to first detection (median) | PSNR of forgeries (median) |
-|---|---|---|---|---|
-| Gaussian Shading | 50/50 / 0/50 / 0/50 | 5/5 | 10 | 28.6 dB |
-| PRC | 50/50 / 0/50 / 0/50 | 5/5 | 20 | 27.7 dB |
-| WIND | 50/50 / 0/50 / 0/50 | 5/5 | 30 | 27.0 dB |
-| Ring-ID | 49/50 / 0/50 / 0/50 | 5/5 | 70 | 26.0 dB |
-| SFW | 49/50 / 0/50 / 0/50 | 5/5 | 90 | 25.1 dB |
-| Tree-Ring | 50/50 / 2/50 / 0/50 | 4/5 | 60 (of the four forged) | 24.2 dB (mean) |
+| Scheme | Clean TPR / FPR generated / FPR real (native) | Forged at step 150, native / calibrated | Removal (native / calibrated, of 100): JPEG · blur · crop · purification |
+|---|---|---|---|
+| Gaussian Shading | 100/100 · 0/200 · 0/100 | 10/10 / 10/10 | 100/100 · 100/100 · 0/0 · 100/100 |
+| PRC | 100/100 · 0/200 · 0/100 | 10/10 / 10/10 | 99/99 · 96/98 · 0/2 · 6/39 |
+| WIND | 99/100 · 0/200 · 0/100 | 10/10 / 10/10 | 98/100 · 79/100 · 0/2 · 0/100 |
+| Tree-Ring | 99/100 · 8/200 · 2/100 | 6/10 / 6/10 | 99/99 · 41/30 · 83/77 · 45/29 |
+| Ring-ID | 95/100 · 0/200 · 0/100 | 6/10 / 10/10 | 87/100 · 36/100 · 0/9 · 0/95 |
+| SFW | 97/100 · 0/200 · 0/100 | 7/10 / 10/10 | 90/100 · 20/100 · 0/2 · 0/100 |
 
-- **Every core scheme was forged.** 29 of 30 attacks turned a real photograph into one the provider's detector calls watermarked. The one miss is a Tree-Ring cover still moving toward the threshold at 150 steps.
-- **PRC and WIND fell fastest among the new schemes** (20 to 50 steps), despite PRC's undetectability proof and WIND's salted noise.
-- **Wider margins slow the attack but do not stop it.** Real photographs start about 15 to 24 units from the Ring-ID and SFW threshold, against 0.4 to 11 for Tree-Ring. Ring-ID and SFW needed 3 to 4 times as many steps as PRC or WIND and still fell on every cover.
-- **Close calls.** Ring-ID and SFW forgeries were flagged at 48.7 to 49.9 against a threshold of 50, the same thin margin that made Tree-Ring verdicts flip between runs.
-- **Five covers give wide intervals** (5/5 is 57% to 100% at 95% confidence). The next milestone uses 10 covers and fixed step budgets instead of stopping at first detection.
+- **Every core scheme can be forged, but not every photograph.** Gaussian Shading, PRC and WIND accepted all ten forgeries; Tree-Ring, Ring-ID and SFW six or seven at the native threshold.
+- **For Ring-ID and SFW the native threshold hides how far the forgery got.** Under the calibrated test both reach 10/10.
+- **Damage depends on the budget and the photograph, not the scheme:** about 22.2, 21.1 and 20.4 dB PSNR at steps 50, 100 and 150 for every scheme.
+- **Crop-and-rescale removes five of six watermarks**; only Tree-Ring survives it. **Purification defeats the native detectors** of Ring-ID, SFW and WIND, while their calibrated scores still detect 95 to 100 of 100.
+- **Ten covers still give wide intervals** (10/10 is 72% to 100% at 95% confidence).
 
-![Detector score against imprint step, six schemes](results/checkin2/figures/fig2_trajectories.png)
+![Detector score against imprint step, six schemes, ten covers](results/checkin3/full/figures/fig2_trajectories.png)
 
-*Detector score for each cover photograph as the imprint proceeds. Step 0 is the untouched photograph; up means closer to being flagged; a filled marker means the detector flagged the image. Gaussian Shading and Tree-Ring from Check-in 1 (Tree-Ring from the 150-step run), the other four from Check-in 2.*
+![Removal results, native and calibrated](results/checkin3/full/figures/fig5_removal.png)
 
-![Steps to forge and PSNR per scheme](results/checkin2/figures/fig3_cost.png)
-
-Method, limits, cost, and problems found: [`docs/checkin-1.md`](docs/checkin-1.md) and the Check-in 2 report [`docs/CMPE261_CheckIn2_Group6.pdf`](docs/CMPE261_CheckIn2_Group6.pdf). Run logs: [`results/checkin1/`](results/checkin1/), [`results/tr150/`](results/tr150/) and [`results/checkin2/`](results/checkin2/).
+The full write-up, with method, algorithms, cost, problems found and every confidence interval, is the Check-in 3 report: [`docs/Group6_CMPE261_CheckIn_3.pdf`](docs/Group6_CMPE261_CheckIn_3.pdf) (source [`docs/checkin-3.md`](docs/checkin-3.md)). Earlier results: Check-in 1 ([`docs/checkin-1.md`](docs/checkin-1.md)) and Check-in 2 ([`docs/CMPE261_CheckIn2_Group6.pdf`](docs/CMPE261_CheckIn2_Group6.pdf)), whose logs stay in [`results/checkin1/`](results/checkin1/), [`results/tr150/`](results/tr150/) and [`results/checkin2/`](results/checkin2/).
 
 ## Status
 
 Against the commitments in [`docs/project-spec.md`](docs/project-spec.md):
 
-- **F1, clean and real-photo baselines:** 6 of 6 core schemes done at 50 images per cell; all six pass the inclusion rule (spec: 100 watermarked, 200 unwatermarked, 100 real).
-- **F2, imprint forgery, same-model attacker:** 6 of 6 core schemes done at 5 covers with stop-at-first-detection (spec: 10 covers, fixed step budgets).
-- **F3, removal robustness:** not started.
+- **F1, clean and real-photo baselines:** done for 6 of 6 core schemes at full size (100 / 200 / 100); all six pass the inclusion rule.
+- **F2, imprint forgery, same-model attacker:** done for 6 of 6 core schemes, 10 covers each, fixed budgets of 50, 100 and 150 steps.
+- **F3, removal robustness:** done for 6 of 6 core schemes, four attacks on 100 watermarked images each.
+- **Next:** forgery with Stable Diffusion 1.5 as the attacker (C2), strength sweeps for crop and purification, up to three extended schemes.
 
-Measured cost: 4.9 s per imprint step on one NVIDIA RTX PRO 6000 (Check-in 1); 8.4 s per imprint step and about 7 s per generation plus detection on one NVIDIA A100 40 GB (Check-in 2).
-
-## Check-in 3 implementation
-
-The full benchmark workflow is prepared in [`notebooks/03_checkin3_colab.ipynb`](notebooks/03_checkin3_colab.ipynb). It adds independent 100/200/100 baselines, strict empirical calibration, 150-step forgery with optimizer checkpoints, and four removal attacks. A successful six-scheme GPU preflight gates full execution. Check-in 3 measurements remain pending.
-
-The new dataset selections retain the original 50 prompts and photographs as exact prefixes. [`data/checkin3-selection.json`](data/checkin3-selection.json) records the source and selection hashes. Historical runs remain separate.
-
-Read [`docs/checkin-3.md`](docs/checkin-3.md) for the protocol and outstanding execution work, or open the [PDF draft](docs/Group6_CMPE261_CheckIn_3_draft.pdf). The draft labels absent results and unconfirmed contributions explicitly. The notebook can use the supplied source archive before branch publication; no publication is required to prepare or review the experiment.
+Measured cost per imprint step: 4.8 s on an NVIDIA RTX PRO 6000, 18.6 s on an NVIDIA L4, 8.2 to 8.4 s on an NVIDIA A100 40 GB. The last 38 forgery covers and all removal runs took one 17-hour A100 job on the SJSU CoE HPC cluster.
 
 ## Team
 
@@ -65,6 +56,8 @@ Shared Google Drive folder (team, instructor, and TA have access): [CMPE261 Grou
 | [`docs/checkin-1.md`](docs/checkin-1.md) | Data exploration, first results, 150-step follow-up |
 | [`docs/checkin-2.md`](docs/checkin-2.md) | Literature survey, approach, algorithms, draft report sections, check-in log |
 | [`docs/CMPE261_CheckIn2_Group6.pdf`](docs/CMPE261_CheckIn2_Group6.pdf) | Check-in 2 report: baselines and forgery for all six core schemes |
+| [`docs/Group6_CMPE261_CheckIn_3.pdf`](docs/Group6_CMPE261_CheckIn_3.pdf) | Check-in 3 report: full baselines, fixed-budget forgery and removal for all six core schemes |
+| [`docs/checkin-3.md`](docs/checkin-3.md) | Source of the Check-in 3 report |
 | [`data/README.md`](data/README.md) | Data sources and committed selections |
 
 ## Layout
@@ -73,12 +66,14 @@ Shared Google Drive folder (team, instructor, and TA have access): [CMPE261 Grou
 |---|---|
 | `src/wmforge/` | Harness over MarkDiffusion, imprint forgery attack, metrics, run log, runner, report |
 | `tests/` | Unit tests |
-| `scripts/` | Data selection; combined figure across runs; Check-in 2 figures (`checkin2_figures.py`) |
+| `scripts/` | Data selection; combined figure across runs; Check-in 2 and 3 figures (`checkin2_figures.py`, `checkin3_figures.py`); Check-in 3 PDF (`checkin3_pdf.py`) |
 | `notebooks/01_smoke_colab.ipynb` | Check-in 1 experiment on Colab |
 | `notebooks/02_checkin2_colab.ipynb` | Check-in 2 run on Colab (Ring-ID, SFW, WIND, PRC), kept with its outputs |
 | `results/checkin1/` | Check-in run: log, summary table, figures (both schemes, 60-step cap) |
 | `results/tr150/` | Tree-Ring rerun with a 150-step cap |
 | `results/checkin2/` | Check-in 2 run: log, per-cover forgery table, figures (four new schemes, 150-step cap) |
+| `notebooks/03_checkin3_colab.ipynb` | Check-in 3 run on Colab: setup, preflight, monitoring, backup |
+| `results/checkin3/full/` | Check-in 3 run: 5,700-row log, calibrations, manifest, environment, summaries, figures, cluster verification records |
 | `results/figures/` | Figures that combine runs |
 
 ## Running
@@ -102,13 +97,21 @@ The Check-in 2 runs:
     python -m wmforge.smoke --out results/tr150 --schemes TR --stages real imprint --n-real 5 --n-covers 5 --max-steps 150
     python -m wmforge.report --run results/tr150
 
-The combined figure above comes from:
+The earlier combined figure (`results/figures/trajectories.png`) comes from:
 
     python scripts/combined_figure.py GS=results/checkin1 TR=results/tr150 --out results/figures/trajectories.png
 
 The Check-in 2 figures, across all six schemes (no GPU needed):
 
     python scripts/checkin2_figures.py results/checkin2/runs.csv results/checkin1/runs.csv results/tr150/runs.csv results/checkin2/figures
+
+The Check-in 3 benchmark (GPU; resumes from its checkpoints), then its summary, figures and PDF (no GPU needed):
+
+    python -m wmforge.preflight --out PILOT_DIR
+    python -m wmforge.checkin3 --out RUN_DIR --preflight PILOT_DIR/preflight.json
+    python -m wmforge.checkin3_report --run RUN_DIR
+    python scripts/checkin3_figures.py --run results/checkin3/full --out results/checkin3/full/figures
+    python scripts/checkin3_pdf.py
 
 ## License and attribution
 

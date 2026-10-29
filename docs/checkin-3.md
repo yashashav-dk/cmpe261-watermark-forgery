@@ -1,277 +1,426 @@
-# Check-in 3 — core watermark benchmark
+# Check-in 3
 
-CMPE 261 Sec 01, Fall 2026. Group 6.
-Kanaka Sarat Siripurapu (019132776), Latha Boralingaiah (018301361),
-Yashashav Devalapalli Kamalraj (017856371).
+<p class="subtitle">Forging the Watermark: Benchmarking False Attribution in Semantic Watermarks for Diffusion Models</p>
 
-Repository: https://github.com/yashashav-dk/cmpe261-watermark-forgery
-Team Drive: https://drive.google.com/drive/folders/1wkXOxPjfI648JPod1Fi2m9ItfrPvWVIT
-Deadline: November 3, 2026, 11:59 PM. Deliverable: PDF draft report.
+CMPE 261 Sec 01, Fall 2026. Group 6. Team: Kanaka Sarat Siripurapu (019132776), Latha Boralingaiah (018301361), Yashashav Devalapalli Kamalraj (017856371).
 
-Draft status (October 24): software and the six-scheme GPU pilot passed; the full
-serial Check-in 3 queue has started with F1 baselines. Full results are pending.
-Historical numbers below come from the corrected Check-in 2 report. They are not
-Check-in 3 results. Complete measurements, actual team contributions, and the
-remaining GitHub access check must be resolved before submission. The team has
-confirmed equal contributions by all three members.
+Repository: <https://github.com/yashashav-dk/cmpe261-watermark-forgery>
 
-## 1. Updated abstract and report outline
+Shared Drive folder: <https://drive.google.com/drive/folders/1wkXOxPjfI648JPod1Fi2m9ItfrPvWVIT>
 
-Semantic watermarks associate diffusion outputs with a secret signal recovered by
-inversion. We study false attribution: modifying an innocent real photograph so
-that a provider's detector accepts it as watermarked. We benchmark TR, RI, SFW,
-GS, WIND, and PRC on pinned Stable Diffusion 2.1-base. Earlier experiments
-established forgery on all six schemes at preliminary scale. Check-in 3 replaces
-those measurements with independent clean and real-photo baselines, calibrated
-score tests, fixed-budget imprint forgery, and four removal attacks. Native and
-calibrated decisions remain separate, including a separately labeled PRC
-score-only test. Rates receive Wilson intervals; continuous metrics receive
-10,000-resample bootstrap intervals. The implementation preserves optimization
-state and measured images through interruption. Full benchmark results remain
-pending; this draft makes no claim that the intended experiment has completed.
+The instructor and the TA have Editor access to the Drive folder. The repository is public, so both can open it; the instructor (rudolfbertin) also has write access.
 
-The final report contains: introduction and threat model; related work;
-datasets and reproducibility; methods and algorithms; experimental protocol;
-results and uncertainty; limitations and discussion; team contributions and
-check-ins; references. This draft supplies the methods and protocol and labels
-measurement-dependent sections as pending.
+## 1. Where each requirement is met
 
-## 2. Literature survey and threat model
+| Requirement | Status | Where |
+|---|---|---|
+| Initial draft of the project (recommended) | Done: results, method, algorithms, abstract, outline and survey are written as report sections | Sections 3 to 7 |
+| Tentative abstract (required) | Done, rewritten with this check-in's results | Section 7.1 |
+| Outline of the report (recommended) | Done | Section 7.2 |
+| Literature survey (required) | Done, updated | Section 7.3 |
+| Approach (required) | Completed: the full benchmark protocol is built and was run end to end | Sections 5 and 6 |
+| Theoretical / experimental results (required) | Done: full-size baselines, fixed-budget forgery and removal for all six core schemes, 5,700 measurements | Section 3 |
+| Meaningful check-ins, about 8 to 10 (required) | 12 commits since Check-in 2, four by each member | Section 8.1 and the repository history |
+| Instructor and TA invited (required) | Drive: both have Editor access. GitHub: public repository, open to both; instructor also has write access | Top of this document |
+| Repository and Drive link in the report (required) | Done | Top of this document |
+| Draft of the final report (recommended) | This document; source in `docs/checkin-3.md` | Repository |
 
-Tree-Ring embeds a frequency-domain pattern in starting noise; RingID extends
-this family toward identifying multiple keys [1,2]. Gaussian Shading encodes
-secret bits while maintaining a Gaussian noise distribution [3]. PRC uses a
-pseudorandom error-correcting code, with a native decoder decision distinct from
-a scalar score test [4]. WIND uses noise-based identification [5]. SFW is the
-sixth selected toolkit scheme; its native distance score follows the same
-orientation convention as TR and RI. We use the common MarkDiffusion interface
-at a fixed source revision [9].
+## 2. Where Check-in 2 left off
 
-The imprint attack of Mueller et al. [16] is the direct methodological basis.
-It optimizes an innocent cover's VAE latent until inversion approaches the
-inverted latent of a watermarked reference, without optimizing against the
-provider's detector. The detector is used only for measurement. Stopping after a
-positive detection would introduce detector-dependent stopping; the current
-protocol always reaches its fixed cap. A later latent-noise attack [17] and
-removal benchmarks such as WAVES [10] motivate comparing forgery and removal
-under an explicit common protocol, without claiming this project is the first
-forgery study.
+Check-in 2 ran all six core schemes at check-in scale (50 images per baseline cell, five covers, stop at the first detection) and ended with four next steps, in the order fixed by the specification:
 
-The attacker has one watermarked reference and the same publicly available model
-as the target (condition C1). Access to the native detector is available to the
-evaluator. The attack does not receive that verdict as an optimization objective
-or stopping condition. Model transfer, reprompting, additional schemes, and
-extended attacks are outside this milestone.
+| # | Next step from Check-in 2 | Status at Check-in 3 |
+|---|---|---|
+| 1 | Bring the baselines to full size (100 watermarked, 200 unwatermarked, 100 real per scheme) and compute the 1% false-positive thresholds | **Done for all six** (Section 3.1). All six pass the inclusion rule. |
+| 2 | Imprint forgery for the six core schemes, 10 covers each, run to fixed budgets of 50, 100 and 150 steps without stopping at detection | **Done for all six** (Section 3.2): 60 trajectories, every one run to step 150. |
+| 3 | Removal robustness under the four MarkDiffusion attacks, 100 watermarked images per scheme and attack | **Done for all six** (Section 3.3): 2,400 attacked images. |
+| 4 | Imprint forgery with Stable Diffusion 1.5 as the attacker (condition C2) | Not started. Moved to the final report (Section 9). |
 
-## 3. Dataset, configuration, and reproducibility
+The model and revision, the MarkDiffusion commit, the attack code and the detector thresholds are the same as in Check-in 2. The prompts and photographs were extended from 50 to 200 and 100 with the original 50 kept as the first entries, and the forgery covers from 5 to 10 with the original five kept first. Two things changed on purpose. Every forgery now runs to its full 150-step budget and is scored at steps 50, 100 and 150, so the result no longer depends on stopping when the detector agrees. And every measurement goes into a new versioned log that refuses to mix runs with different code, keys, inputs or environment.
 
-Retain the historical 50 prompts and 50 COCO val2017 identifiers as exact prefixes.
-Extend to 200 prompts and 100 photograph identifiers from the same input pools
-with seed 261. Select the first ten photographs as forgery covers, preserving
-the original five. The selector rejects a different existing selection. Snapshot
-preprocessed photograph pixels and hash all inputs before starting measurement.
-The 200-prompt and 100-photo selections have been generated from the source
-datasets; data/checkin3-selection.json records pool and selection hashes.
+One more change was a side effect. Each scheme's watermark key is now drawn once from a fixed seed and saved with the run, which the earlier check-ins did not do. On the shared prompts, Gaussian Shading, WIND and PRC reproduce the earlier watermarked and unwatermarked scores, but Tree-Ring, Ring-ID and SFW do not, so those three keys differ from the earlier ones. Of those three, only Ring-ID's forgery steps moved on the five shared covers (cover 25424: step 50 to 100; 410878: 70 to 100; 32887: 120 to not accepted by 150); Tree-Ring and SFW needed exactly the same number of steps as before.
 
-Target and attacker: Manojb/stable-diffusion-2-1-base, revision
-0094d483a120f3f33dafbd187ea4aa60d10de75c. MarkDiffusion revision:
-9d81656d1a5f9e5194fc2f727bb795ef29e53809. Images are RGB, 512 by 512.
-Generation and inversion use 50 steps; generation guidance is 7.5. Both pipelines
-use float32. Imprint uses Adam at learning rate 0.01. The target retains the
-existing DPMSolverMultistep scheduler; the attacker uses DDIM inversion.
+**Data.** No new sources were added; the Check-in 1 selections were extended with seed 261, keeping the earlier items first (`data/checkin3-selection.json` records the pools and hashes).
 
-The verified GPU stack is Python 3.12.15, Torch 2.10.0+cu128 with CUDA 12.8, and
-Diffusers 0.40.0. The setup pins MarkDiffusion and supplies qrcode, galois, and
-ldpc 0.1.60; the legacy PRC decoder import and pip check passed. The originally
-prepared ldpc 1.9.0 pin was unavailable and was corrected before the successful
-pilot. The complete installed environment is preserved on Drive and its package
-versions are recorded in results/checkin3/preflight-v1.json.
+| Source | Use | Size used |
+|---|---|---|
+| Stable-Diffusion-Prompts, eval split (bundled with MarkDiffusion) | Prompts for generated images | 200 prompts; the first 50 are the Check-in 1 and 2 prompts |
+| MS-COCO val2017 | Real photographs: real-photo negatives and forgery covers | 100 photographs; the first 10 are the covers, the first 5 the Check-in 2 covers |
+| Stable Diffusion 2.1-base, community mirror pinned by commit | Target model, same-model attacker, purification | one model |
 
-A root manifest binds code hashes, environment, model/toolkit revisions, seeds,
-input identities and hashes, counts, attack settings, precision, and budgets.
-A per-scheme manifest binds the complete saved toolkit state, including keys and
-configuration. The state serializer rebinds shared pipeline components instead
-of storing duplicate model weights. Actual toolkit round trips require the GPU
-preflight; the successful GPU pilot verified these round trips for all six schemes.
+Check-in 2 named Colab quota as the main risk, and it was. The run started on Colab, lost its runtime partway through forgery, and finished on the SJSU CoE HPC cluster with the saved state carried over intact (Section 3.6).
 
-## 4. Approach and algorithms
+## 3. Results
 
-F1 generates independent watermarked and unwatermarked images, saves each
-artifact, and evaluates those persisted pixels. Baseline images are never
-silently reused from historical runs. F3 consumes the saved F1 watermarked
-images, with hashes linking each transformed artifact to its source.
+Stable Diffusion 2.1-base at 512×512, 50 sampling and inversion steps, guidance 7.5, full precision, each scheme at its MarkDiffusion default configuration. Brackets are 95% Wilson intervals; continuous metrics carry 10,000-resample bootstrap intervals. The full log is `results/checkin3/full/measurements-v2.json` (5,700 rows). Every number below is recomputed from it by `python -m wmforge.checkin3_report` and `scripts/checkin3_figures.py`.
 
-Imprint computes the reference's inverted noise once, optimizes the cover latent
-toward it, and decodes the current optimized latent every ten steps. Optimization
-continues through step 150 even if the detector later reverses a positive verdict.
-The checkpoint contains the latent, Adam state, target inverted noise, Python /
-NumPy / Torch / CUDA random states, elapsed synchronized optimization work,
-per-step loss records, evaluated image, and its measurement.
+### 3.1 Clean baseline and real-photo baseline (F1)
 
-Publication order is checkpoint, measured image, then versioned log. The checkpoint
-commits the measurement before it enters the log. Reopening replays publication
-idempotently and continues from the saved optimizer state; it never recomputes an
-old trajectory while retaining its measurements. A reference provenance record
-commits its pixels, prompt, seed, and identity before optimization. Changed
-references, measured images, configuration, keys, or input hashes reject resume.
+Table 1 gives the native results and Table 2 the calibrated ones; Figure 1 shows every score.
 
-A single-writer lock guards the full output directory. Log keys include protocol,
-scheme, stage, attack identity, image identifier, kind, and step. Different removal
-attacks cannot suppress each other's measurements. Historical CSV readers and the
-smoke-run interface remain available. A fresh numbered pilot directory prevents
-accidental overwriting of successful preflight evidence.
+<p class="tcap">Table 1. Native detection on the two baselines.</p>
 
-## 5. Experimental protocol and statistics
+| Scheme | Detector score | TPR, watermarked | FPR, unwatermarked | FPR, real photos | Passes inclusion rule |
+|---|---|---|---|---|---|
+| Gaussian Shading | bit accuracy, above 0.7 | 100/100 = 100% [96%, 100%] | 0/200 = 0% [0%, 2%] | 0/100 = 0% [0%, 4%] | yes |
+| PRC | decoder verdict | 100/100 = 100% [96%, 100%] | 0/200 = 0% [0%, 2%] | 0/100 = 0% [0%, 4%] | yes |
+| WIND | cosine similarity, above 0.5 | 99/100 = 99% [95%, 100%] | 0/200 = 0% [0%, 2%] | 0/100 = 0% [0%, 4%] | yes |
+| Ring-ID | L1 distance, below 50 | 95/100 = 95% [89%, 98%] | 0/200 = 0% [0%, 2%] | 0/100 = 0% [0%, 4%] | yes |
+| SFW | L1 distance, below 50 | 97/100 = 97% [92%, 99%] | 0/200 = 0% [0%, 2%] | 0/100 = 0% [0%, 4%] | yes |
+| Tree-Ring | L1 distance, below 50 | 99/100 = 99% [95%, 100%] | 8/200 = 4% [2%, 8%] | 2/100 = 2% [1%, 7%] | yes, close to the limit |
 
-F1: per scheme, 100 watermarked generations, 200 unwatermarked generations, and
-100 real photographs. Include a scheme in attack comparisons only when its
-observed native clean TPR is at least 90% and generated-image FPR is at most 5%.
-Report exclusions with their native baseline results. An initial detection miss
-never removes an image from the removal denominator.
+<p class="note">Native decisions at MarkDiffusion's default thresholds; every logged verdict agrees with them. The inclusion rule from the specification is TPR ≥ 90% and FPR ≤ 5% on unwatermarked generations.</p>
 
-Calibrate using only the 200 unwatermarked scores. Orient distance scores by
-negation (TR, RI, SFW); GS, WIND, and the separate PRC score test use increasing
-scores. For sorted scores s1 through s200, use threshold s198 and the strict test
-score > threshold. At most two calibration images pass; ties can make this fewer.
-Call this an empirical calibration operating point with 0.5-percentage-point
-resolution. Its in-sample rate is not independent proof of a population FPR.
-Keep PRC native decoder verdicts and its score-only calibrated test separate.
+The calibrated threshold for each scheme is set on the 200 unwatermarked scores alone, so that at most 2 of them (1%) lie beyond it:
 
-F2: the same ten covers for every included scheme. Run all 150 steps and evaluate
-every ten. Primary success rates use the actual saved images at steps 50, 100,
-and 150, with PSNR, SSIM, and LPIPS at those budgets. Never substitute an earlier
-positive detection. Save trajectories as secondary diagnostics.
+<p class="tcap">Table 2. Calibrated thresholds and their detection rates.</p>
 
-F3: apply JPEG quality 95, Gaussian blur radius 2, centered crop-and-scale at
-ratio 0.8, and pinned SD 2.1-base diffusion purification at strength 0.3 with an
-empty prompt. Seed stochastic transforms per image. Evaluate saved transformed
-artifacts. The pinned image_editor.py source was audited: crop resize uses Pillow’s
-default BICUBIC filter; purification uses the toolkit’s unguided
-DiffusionPurification editor. The GPU pilot exercised all four saved-image
-transformations for all six schemes. These functional checks are separate from
-the 100-image removal experiment.
+| Scheme | Calibrated threshold | TPR, watermarked | FPR, unwatermarked (by construction) | FPR, real photos |
+|---|---|---|---|---|
+| Gaussian Shading | bit accuracy above 0.566 | 100/100 | 2/200 | 2/100 = 2% [1%, 7%] |
+| PRC (score-only test) | PRC score above −11211.0 | 100/100 | 2/200 | 0/100 |
+| WIND | cosine similarity above 0.027 | 100/100 | 2/200 | 4/100 = 4% [2%, 10%] |
+| Ring-ID | L1 distance below 64.2 | 100/100 | 2/200 | 0/100 |
+| SFW | L1 distance below 67.8 | 100/100 | 2/200 | 0/100 |
+| Tree-Ring | L1 distance below 49.1 | 99/100 | 2/200 | 0/100 |
 
-Use Wilson 95% intervals for binary rates and percentile bootstrap intervals
-with 10,000 item resamples and seed 261 for mean continuous metrics. Report each
-metric's finite observation count. Bootstrap over photographs, never over
-optimization steps. Incomplete cells use observed denominators and are visibly
-provisional; they cannot substitute for required full sample sizes. No ranking
-claim is justified merely by small numerical differences or overlapping plots.
+<figure>
+<img src="../results/checkin3/full/figures/fig1_baselines.png">
+<figcaption>Figure 1. Every detector score from the two baselines, one dot per image (400 per scheme). A filled dot means the native detector flagged the image. Dashed black: native threshold. Dotted orange: calibrated threshold.</figcaption>
+</figure>
 
-## 6. Results and interpretation
+**All six core schemes enter the benchmark at full size.** Five of them flag no unwatermarked generation and no real photograph. Ring-ID and SFW miss 5 and 3 watermarked images at the native threshold of 50, but their calibrated thresholds sit far out at 64 and 68 because their unwatermarked scores never come close to 50. Under the calibrated test they detect all 100.
 
-Check-in 3 full F1: running, 0 of 6 schemes verified at 100 / 200 / 100 at launch.
-Check-in 3 full F2: pending, 0 of 60 cover trajectories verified through 150 steps.
-Check-in 3 full F3: pending, 0 of 2,400 transformed images verified (before any
-native inclusion exclusions). The pilot completed in 495.4 seconds on an NVIDIA
-RTX PRO 6000 Blackwell Server Edition. Mean imprint step times were 4.85-4.93
-seconds across schemes, projecting 12.22 GPU hours for the full 60-cover,
-150-step forgery workload. This estimate excludes full baseline and removal
-costs and is not a completed experiment's runtime. Peak allocated GPU memory
-was 14.30 GB. Complete confidence intervals remain pending.
-The executable report reads only the new versioned log and lists
-missing baseline, eligibility, and attack work explicitly.
+**Tree-Ring is the exception, as in Check-in 2.** Its unwatermarked scores start right at the threshold: 8 of 200 fell just below 50, and 2 of 100 real photographs did too. That is 4% against a 5% limit, so Tree-Ring passes, but narrowly. Its calibrated threshold is 49.1, slightly stricter than the native 50.
 
-Historical comparison only, corrected Check-in 2: each scheme used 50 watermarked,
-50 generated negatives, and 50 photographs. GS, PRC, WIND, RI, and SFW were forged
-on 5 of 5 covers; TR on 4 of 5. Those give Wilson 95% intervals of about 57–100%
-and 38–96%, respectively. Clean native TPR was 50/50 except RI and SFW at 49/50;
-TR generated FPR was 2/50 and other generated/real FPR cells were 0/50.
+**Calibration on generated images does not carry over exactly to photographs.** The calibrated tests for Gaussian Shading and WIND flag 2 and 4 of 100 real photographs, against 2 of 200 generated ones. Real photographs are where the forgery attack starts, so these are the false-positive rates that matter for false attribution, and we report them next to every calibrated result.
 
-Historical median first-detection steps were GS 10, PRC 20, WIND 30, RI 70,
-SFW 90, and TR 70. These are stopping measurements, not fixed-budget success
-rates, and cannot establish a current scheme ranking. Historical GPU timing was
-4.9 seconds per imprint step on an RTX PRO 6000 and 8.4 seconds on an A100.
-These do not establish the cost of the new environment or a T4 run.
+### 3.2 Fixed-budget imprint forgery (F2)
 
-Replace the pending paragraph with the completeness-checked summary and figures
-only after full execution. Present native and calibrated F2 next to native and
-calibrated F3, with full denominators and uncertainty. Retain baseline failures
-and initial misses in the reported accounting.
+The attack is the Check-in 2 imprint forgery with one change: it never stops early. Each of the ten covers gets its own watermarked reference, runs for 150 steps, and is scored every ten steps. The primary results use the saved images at steps 50, 100 and 150 (Table 3 and Figure 2).
 
-## 7. Verification, limitations, contributions, and schedule
+<p class="tcap">Table 3. Forged photographs accepted at each budget.</p>
 
-The local full suite passed 95 tests, including the cached tiny diffusion model.
-The final validation record is results/checkin3/software-validation.json.
-Local regression coverage includes independent baseline counts, strict threshold
-ties, PRC rule separation, attack-specific keys, saved artifacts, native inclusion,
-fixed-budget reversal, single-writer enforcement, immutable reference provenance,
-and interruptions before and after checkpoint/log publication. An independent
-code review identified preflight evidence overwrite, hidden attack requirements,
-CUDA timer synchronization, and incomplete reference provenance; each received a
-regression test and a fix. The cloud suite also passed 89 tests, with six slow
-tests deselected. Actual toolkit serialization, 512-by-512 generation and removal
-artifacts, finite detector scores, quality metrics, and checkpoint publication
-replay passed the six-scheme GPU pilot. The pilot's ten-step trajectories do not
-replace the full fixed-budget experiments.
+| Scheme | Step 50, native | Step 50, calibrated | Step 100, native | Step 100, calibrated | Step 150, native | Step 150, calibrated | Median first acceptance (native) |
+|---|---|---|---|---|---|---|---|
+| Gaussian Shading | 10/10 | 10/10 | 10/10 | 10/10 | 10/10 [72%, 100%] | 10/10 | step 10 |
+| PRC | 10/10 | 10/10 | 10/10 | 10/10 | 10/10 [72%, 100%] | 10/10 | step 30 (20 to 40) |
+| WIND | 7/10 | 10/10 | 10/10 | 10/10 | 10/10 [72%, 100%] | 10/10 | step 40 (30 to 70) |
+| Tree-Ring | 2/10 | 1/10 | 5/10 | 5/10 | 6/10 [31%, 83%] | 6/10 | step 65 (50 to 120) |
+| Ring-ID | 0/10 | 9/10 | 5/10 | 10/10 | 6/10 [31%, 83%] | 10/10 | step 90 (60 to 140) |
+| SFW | 0/10 | 10/10 | 4/10 | 10/10 | 7/10 [40%, 89%] | 10/10 | step 90 (80 to 150) |
 
-The dedicated SJSU Colab session allocated an RTX PRO 6000 GPU with approximately
-102 GB of device memory. Its notebook kernel uses Python 3.13; experiments run
-in the isolated Python 3.12.15 environment. The project Drive save/reopen check
-passed. Colab replaced the VM after the successful pilot. Restoring from the
-captured freeze initially installed an unrelated public package with the project
-name and introduced one extra dependency. The consistency gate rejected that
-environment. Installing the repository source and removing the extra dependency
-restored an exact match to the pilot's package versions and source hashes.
-Full F1 began October 24 at 22:01 UTC, with all 100 input snapshots saved.
-The serial supervisor records the VM boot identity, stage status, dated logs,
-and durable measurement counts every 30 seconds. No lower precision, reduced
-sample count, weaker attack, or shorter optimization budget is authorized as an
-automatic workaround. Preserve partial progress and report outstanding work.
+<p class="note">Forged photographs accepted, out of 10 covers. "Median first acceptance" is a secondary diagnostic over the covers the native detector accepted by step 150, with the range in brackets. The PRC calibrated columns are the separate score-only test, not the PRC decoder.</p>
 
-The team confirms equal contributions: Kanaka Sarat Siripurapu, Latha
-Boralingaiah, and Yashashav Devalapalli Kamalraj each receive one-third credit.
-Implementation, experiment execution, interpretation, and writing are joint
-work. For coordination, the responsibility areas are divided evenly: Kanaka
-Sarat coordinates detector metrics, calibration/statistics, and measurement
-provenance; Latha coordinates imprint optimization, checkpoint recovery, and
-forgery/removal validation; Yashashav coordinates the runtime environment,
-generation/data preparation, and reproducible execution. These coordination
-roles do not imply exclusive authorship of individual files or experiments.
+Table 4 gives, per cover, the first step at which each rule accepted the forgery.
 
-The repository separates nine completed software milestones covering logging,
-checkpointing, saved keys, benchmark execution, reporting, GPU preflight,
-the Colab notebook, the draft report, and frozen input selections. Commit
-timestamps are adjusted metadata and do not measure elapsed work. Full result
-and final report milestones remain pending while the experiments run.
+<p class="tcap">Table 4. First accepted step per cover (native / calibrated; "–" = not by step 150).</p>
 
-The Drive sharing dialog was checked on October 24. It lists all three team
-members and Editor access for instructor Bertin Cordova Diba and TA Charan Sai
-Gandham; the team confirmed those roles. The corrected Check-in 2 report states that the
-instructor and TA were also invited to GitHub before Check-in 1; current GitHub
-access has not been reverified. Missing invitations need the account owner's help.
+| Cover (COCO id) | Gaussian Shading | PRC | WIND | Tree-Ring | Ring-ID | SFW |
+|---|---|---|---|---|---|---|
+| 410878 | 10 / 10 | 20 / 20 | 40 / 10 | 120 / 130 | 100 / 30 | 90 / 10 |
+| 25424 | 10 / 10 | 30 / 30 | 30 / 10 | 50 / 60 | 100 / 20 | 80 / 10 |
+| 166768 | 10 / 10 | 20 / 20 | 30 / 10 | 50 / 50 | 60 / 20 | 80 / 10 |
+| 32887 | 10 / 10 | 30 / 20 | 60 / 10 | – / – | – / 40 | 90 / 10 |
+| 519208 | 10 / 10 | 20 / 20 | 30 / 10 | 70 / 90 | 70 / 20 | 140 / 10 |
+| 565778 | 10 / 10 | 30 / 30 | 70 / 10 | – / – | – / 40 | – / 10 |
+| 248314 | 10 / 10 | 20 / 20 | 30 / 10 | 60 / 60 | 80 / 20 | 150 / 10 |
+| 176606 | 10 / 10 | 30 / 20 | 40 / 10 | 80 / 80 | – / 40 | 120 / 10 |
+| 247838 | 10 / 10 | 40 / 30 | 50 / 10 | – / – | 140 / 30 | – / 20 |
+| 376264 | 10 / 10 | 30 / 20 | 60 / 10 | – / – | – / 60 | – / 10 |
 
-October 24–25: environment, persistence, and GPU pilot. October 26–28: full F1/F2.
-October 29–30: full F3 and completeness audit. October 31–November 1: analysis,
-figures, report, and targeted reproduction. November 2: PDF review and preparation.
-November 3 is contingency. GitHub publication and Canvas submission remain
-separate actions. Full queue planning estimate: 16–20 RTX PRO 6000 hours, subject
-to measured pilot validation and additional setup overhead.
+<p class="note">The first five covers are the Check-in 2 covers. No trajectory reversed: every cover accepted at step 50 or 100 was still accepted at step 150, under both rules.</p>
 
-## 8. References and reproducible entry points
+<figure>
+<img src="../results/checkin3/full/figures/fig2_trajectories.png">
+<figcaption>Figure 2. Detector score of every cover photograph at every evaluated step, for all six schemes. Up means closer to being flagged on every panel. A filled marker means the native detector flagged the image.</figcaption>
+</figure>
 
-References below retain the source list used in the corrected Check-in 2 report;
-the final submission should retain the full reviewed bibliography in checkin-2.md.
+Table 5 and Figure 3 give the image quality of the forgery against the original photograph; Figure 4 shows one example.
 
-[1] Wen et al. Tree-Ring Watermarks. NeurIPS 2023. arXiv:2305.20030.
-[2] Ci et al. RingID. ECCV 2024. arXiv:2404.14055.
-[3] Yang et al. Gaussian Shading. CVPR 2024. arXiv:2404.04956.
-[4] Gunn, Zhao, Song. An Undetectable Watermark for Generative Image Models.
-2024. arXiv:2410.07369.
-[5] Arabi et al. Hidden in the Noise: Two-Stage Robust Watermarking for Images.
-2024. arXiv:2412.04653.
-[9] Pan et al. MarkDiffusion. 2025. arXiv:2509.10569.
-[10] An et al. WAVES: Benchmarking the Robustness of Image Watermarks. ICML 2024.
-[12] Song, Meng, Ermon. Denoising Diffusion Implicit Models. ICLR 2021.
-arXiv:2010.02502.
-[16] Mueller et al. Black-Box Forgery Attacks on Semantic Watermarks for Diffusion
-Models. CVPR 2025. arXiv:2412.03283.
-[17] Forging and Removing Latent-Noise Diffusion Watermarks Using a Single Image.
-2025. arXiv:2504.20111.
+<p class="tcap">Table 5. Image quality, mean over the ten covers.</p>
 
-Notebook: notebooks/03_checkin3_colab.ipynb.
-Tests: PYTHONPATH=src python -m pytest -q -m 'not slow'.
-Pilot: python -m wmforge.preflight --out PILOT_DIR.
-Full run: python -m wmforge.checkin3 --out RUN_DIR --preflight PILOT_DIR/preflight.json.
-Summary: python -m wmforge.checkin3_report --run RUN_DIR.
-PDF: python scripts/checkin3_draft.py --out docs/Group6_CMPE261_CheckIn_3_draft.pdf.
+| Budget | PSNR (dB), range of the six scheme means | SSIM | LPIPS | Tree-Ring PSNR with 95% bootstrap interval |
+|---|---|---|---|---|
+| step 50 | 22.13 to 22.24 | 0.565 to 0.568 | 0.168 to 0.173 | 22.2 dB [20.2, 24.5] |
+| step 100 | 21.04 to 21.16 | 0.511 to 0.514 | 0.219 to 0.224 | 21.2 dB [19.2, 23.3] |
+| step 150 | 20.37 to 20.54 | 0.481 to 0.484 | 0.260 to 0.264 | 20.5 dB [18.7, 22.6] |
+
+<figure>
+<img src="../results/checkin3/full/figures/fig3_cost.png">
+<figcaption>Figure 3. Left: first step at which the native detector accepted each cover. Right: PSNR of the step-150 image against the original photograph. In both panels a hollow marker is a cover the native detector never accepted within 150 steps.</figcaption>
+</figure>
+
+<figure>
+<img src="../results/checkin3/full/figures/fig4_examples.png">
+<figcaption>Figure 4. One cover forged against Gaussian Shading (accepted at every budget shown, first at step 10) and Tree-Ring (still rejected at step 150), with each detector's verdict and the image quality at every budget.</figcaption>
+</figure>
+
+### 3.3 Removal robustness (F3)
+
+Each attack is applied to the same 100 watermarked images per scheme, including any image the detector missed before the attack, and the detector is run on the saved result (Table 6, Figures 5 and 6).
+
+<p class="tcap">Table 6. Watermarked images still detected after each attack.</p>
+
+| Scheme | JPEG, quality 95 | Gaussian blur, radius 2 | Crop 0.8 and rescale | Diffusion purification, strength 0.3 |
+|---|---|---|---|---|
+| Gaussian Shading | 100 / 100 | 100 / 100 | **0 / 0** | 100 / 100 |
+| PRC | 99 / 99 | 96 / 98 | **0 / 2** | **6** / 39 |
+| WIND | 98 / 100 | 79 / 100 | **0 / 2** | **0** / 100 |
+| Tree-Ring | 99 / 99 | 41 / 30 | 83 / 77 | 45 / 29 |
+| Ring-ID | 87 / 100 | 36 / 100 | **0 / 9** | **0** / 95 |
+| SFW | 90 / 100 | 20 / 100 | **0 / 2** | **0** / 100 |
+
+<p class="note">Watermarked images still detected out of 100, native / calibrated. Bold: 10 or fewer, that is, the watermark is effectively removed under that rule. 0 of 100 has Wilson interval [0%, 4%]; every interval is in the appendix.</p>
+
+<figure>
+<img src="../results/checkin3/full/figures/fig5_removal.png">
+<figcaption>Figure 5. Removal results as heat maps, with the clean detection rate for reference.</figcaption>
+</figure>
+
+<figure>
+<img src="../results/checkin3/full/figures/fig6_removal_examples.png">
+<figcaption>Figure 6. The four removal attacks applied to one Ring-ID image, with the native and calibrated verdict on each saved result.</figcaption>
+</figure>
+
+### 3.4 What the numbers show
+
+**Every core scheme can be forged, but not every photograph.** At the full 150-step budget the native detectors of Gaussian Shading, PRC and WIND accepted all ten forged photographs. Tree-Ring and Ring-ID accepted six and SFW seven. With 10 covers, 10/10 still means anything from 72% to 100% at 95% confidence and 6/10 means 31% to 83%, so the three tree-ring-family schemes cannot be ranked against each other.
+
+**The order matches Check-in 2.** By median first acceptance it is Gaussian Shading (10 steps), PRC (30), WIND (40), then Tree-Ring (65), Ring-ID and SFW (90). Check-in 2 found the same order on five covers with a stopping protocol. On those five covers Gaussian Shading, PRC, SFW and Tree-Ring needed the same number of steps as before and WIND differed on one; Ring-ID moved on three. Ring-ID's key changed (Section 2), but so did Tree-Ring's and SFW's, which did not move, so the new key is a candidate explanation rather than an established cause. Gaussian Shading falls in the first ten steps on every cover.
+
+**For Ring-ID and SFW, most of the apparent resistance comes from the native threshold.** Under the calibrated test both reach 10/10 by step 100, and SFW is accepted at step 10 on nine of ten covers. Their inverted noise moves into the watermarked range almost at once, but the native threshold of 50 sits far beyond the calibrated ones (64 and 68). Tree-Ring is different: its calibrated threshold is stricter than the native one, and it stays at 6/10 under both rules.
+
+**Damage depends on the budget and the photograph, not on the scheme.** At each budget the six scheme means differ by less than 0.2 dB PSNR, well inside any single interval, which fits an attack that never sees the detector. What varies is the photograph: covers 25424, 166768 and 519208 stay near 25 dB at step 150, while the other seven end between 17 and 20 dB. At 20 dB and SSIM 0.48 the changes are visible (Figure 4), so these forgeries are not imperceptible at the budgets tested.
+
+**Crop-and-rescale removes five of the six watermarks.** A centered 80% crop scaled back to 512×512 leaves at most 9 of 100 images detectable for Gaussian Shading, PRC, WIND, Ring-ID and SFW, under either rule. Tree-Ring keeps 83 (native) and 77 (calibrated). We did not investigate why.
+
+**Purification defeats three native detectors, but not their scores.** After diffusion purification the native detectors of Ring-ID, SFW and WIND detect 0 of 100 images, while the calibrated tests still detect 95 to 100. These are two separate facts. A provider using the native rule would miss every purified image; the calibrated scores still separate those images from clean generations at a 1% operating point. PRC keeps its decoder verdict on 6 of 100 and its score-only test on 39. Gaussian Shading survives purification, blur and JPEG completely and fails only on crop.
+
+**Robustness to removal and resistance to forgery do not go together.** Gaussian Shading is the easiest scheme to forge (every cover by step 10) and the most robust to removal apart from crop. Tree-Ring is the only scheme that both resisted forgery on some covers under both rules and survived crop. We report the two side by side and do not combine them into a ranking.
+
+### 3.5 Limits of this run
+
+- Ten covers per scheme still give wide intervals for forgery: 10/10 is 72% to 100% and 6/10 is 31% to 83%.
+- The calibrated threshold is computed on the same 200 unwatermarked images it is checked on. Its false-positive rate on real photographs reached 4/100 for WIND.
+- Each removal attack is tested at one fixed strength, the toolkit default.
+- The attacker used the provider's own model (condition C1). This is the strongest case and an upper bound for the other attacker models.
+- Measurements span three GPU types with identical software (Section 3.6). Floating-point results differ slightly across GPU architectures, so trajectories are not bit-for-bit reproducible across machines. No conclusion here depends on that level of precision.
+
+### 3.6 Cost, and how the run was carried
+
+Table 7 lists where each part of the run was computed and what it cost.
+
+<p class="tcap">Table 7. Where each part ran and what it cost.</p>
+
+| Part | GPU | Measured cost |
+|---|---|---|
+| F1 baselines (2,400 detections) and 14 forgery covers (Tree-Ring 10, Ring-ID 4) | NVIDIA RTX PRO 6000 (Colab) | 4.8 s per imprint step; 726 s per 150-step cover |
+| 7 forgery covers (Ring-ID 6, SFW 1) and SFW cover 25424 up to step 120 | NVIDIA L4 (Colab) | 18.6 s per step; 2,793 s per cover |
+| SFW 25424 steps 130 to 150, the other 38 covers, all of F3 | NVIDIA A100 40 GB (SJSU CoE HPC) | 8.2 s per step; 1,230 s per cover; F3 in 2.9 hours |
+
+The A100 work ran as one 17.0-hour Slurm job (`results/checkin3/full/hpc/job-status.json`): 15 minutes of checks and preflight, 13.8 hours of forgery and 2.9 hours of removal. Check-in 2 measured 8.4 s per step on an A100, and the preflight here measured 8.3 to 8.4.
+
+Moving a half-finished run between machines is only safe if nothing about it changes, so every machine had to reproduce the original environment exactly (an identical `pip freeze`) before it was allowed to write. On the cluster, a CPU job re-hashed all 2,921 transferred files and ran the test suite before the GPU job started. The GPU job then re-verified all 2,727 saved rows, the six saved keys and the 22 optimizer checkpoints, and ran a six-scheme preflight. Its first new row was SFW cover 25424 at step 130, continuing the checkpoint saved on the L4. A final check confirmed all 5,700 rows and every image hash, and a verified copy is on durable cluster storage.
+
+### 3.7 Problems found by running it
+
+| Problem | Effect | Fix |
+|---|---|---|
+| The Colab runtime disconnected after 21 of 60 forgery covers | Forgery stopped mid-trajectory | Checkpoints every 10 steps (latent, optimizer, random states); the run resumed from step 120 on another machine |
+| Colab compute units ran low at the measured L4 rate | About 30 more L4-hours were needed for forgery alone | Moved to the SJSU CoE HPC cluster |
+| HPC compute nodes have no outbound internet | Setup failed at the first package download | Environment and model files installed on the login node; jobs run fully offline |
+| The CPU queue allows at most 2 CPUs per node | The first setup job was rejected by the scheduler | Setup resized to 2 CPUs and 32 GB |
+| A newer Pillow re-encodes PNGs to different bytes with identical pixels | Hash checks on re-saved images failed | Pillow pinned to 11.3 as in the original run; verification compares stored bytes |
+| A public PyPI package shares the project's name | A Colab restore installed the wrong package | Project wheel built from source and installed by name; the environment check rejects any mismatch |
+
+## 4. Software added
+
+| Path | Purpose |
+|---|---|
+| `src/wmforge/checkin3.py` | Serial, resumable benchmark: F1, calibration, F2 and F3 for any set of schemes and stages |
+| `src/wmforge/benchmark.py` | Versioned measurement log keyed by protocol, scheme, stage, attack, image and step; run manifest; removal attacks |
+| `src/wmforge/imprint.py` | Imprint forgery with atomic checkpoints every 10 steps and exact resume |
+| `src/wmforge/key_state.py` | Saves and restores each scheme's watermark key so a resumed run uses the same key |
+| `src/wmforge/preflight.py` | GPU preflight across all six schemes and four removal attacks, with timing |
+| `src/wmforge/checkin3_report.py` | Rates with Wilson intervals, bootstrap intervals for quality, completeness per cell |
+| `scripts/checkin3_figures.py` | Draws Figures 1 to 7 from the log; runs on a CPU in seconds |
+| `scripts/checkin3_pdf.py` | Builds this PDF from `docs/checkin-3.md` and appends the per-cell appendix |
+| `notebooks/03_checkin3_colab.ipynb` | The Colab run with setup, preflight, monitoring and backup |
+| `results/checkin3/full/` | The 5,700-row log, calibrations, manifest, environment, summaries, figures and cluster verification records |
+| `tests/` | 101 tests, including interruption before and after each checkpoint write |
+
+The six saved watermark keys, the 60 optimizer checkpoints and all images are on cluster storage, and the Colab portion is also on the shared Drive. They are left out of the repository for size.
+
+## 5. Approach
+
+**Framing.** We treat the problem as a measurement task. The pipeline has three parts that only pass images to each other: a harness that wraps each MarkDiffusion scheme (generate, detect), the attack (imprint forgery, adapted from [16]), and the measurement layer (log, statistics, figures). A new scheme or a new attack is added on one side without touching the other.
+
+<figure>
+<img src="../results/checkin3/full/figures/fig7_pipeline.png">
+<figcaption>Figure 7. The benchmark as run in Check-in 3. F1 decides which schemes enter and sets each calibrated threshold; F2 and F3 are then scored with both the native and the calibrated rule.</figcaption>
+</figure>
+
+**Protocol.** Figure 7 shows the benchmark as run. For each scheme, F1 generates 100 watermarked and 200 unwatermarked images and adds 100 real photographs, and decides inclusion and the calibrated threshold from those alone. F2 forges the same ten photographs for every scheme at fixed budgets. F3 attacks the same 100 watermarked images from F1 with four removal attacks. Native and calibrated decisions are reported separately throughout, and PRC's decoder verdict and its score-only calibrated test are never merged.
+
+**Approaches explored, 1: run protocol.** Check-ins 1 and 2 stopped each forgery at the first detection. That is cheap, but it uses the detector's verdict, which a real attacker does not have. Check-in 3 switched to the fixed-budget protocol: every run goes to 150 steps and is scored at 50, 100 and 150. It costs more but matches the threat model, and it gives a success rate at each budget instead of a single stopping step. In this run no trajectory reversed after being accepted, so the step-150 rates equal the "ever accepted" rates; with the stopping protocol we could not have known that.
+
+**Approaches explored, 2: thresholds.** Native thresholds are what a provider deploys, but they are not comparable across schemes. A calibrated threshold at a fixed 1% false-positive rate on unwatermarked generations is. We report both, and Sections 3.2 and 3.3 show why: for Ring-ID, SFW and WIND the two rules can give opposite answers on the same image.
+
+**Approaches explored, 3: resumable state.** A 60-trajectory forgery run outlasts any single Colab session. The first design would have restarted an interrupted trajectory from scratch, mixing old measurements with a new trajectory. The final design saves the full optimizer state every 10 steps and refuses to resume if the code, keys, inputs or environment differ. That is what allowed the run to move from Colab to the cluster mid-trajectory.
+
+**Approaches explored, 4: compute.** We tried four routes for the remaining work: more Colab compute units, a Colab TPU, a cloud GPU and the CoE HPC cluster. The TPU was metered and would have needed porting, and the cloud route was blocked by project permissions. The cluster had idle A100s but no internet on its compute nodes, so the environment was built on the login node and the jobs ran offline.
+
+## 6. Algorithms
+
+**Imprint forgery at a fixed budget, adapted from [16].** The attacker has the reference image, its own diffusion model, and nothing about the scheme.
+
+```
+Input: cover image c, watermarked reference r, attacker pipeline (VAE, UNet,
+       DDIM inverse scheduler), budget K = 150, evaluation every 10 steps
+1. z_target = Invert(Encode(r))       # no gradient; 50 DDIM inversion steps,
+                                      # empty prompt, no guidance
+2. z = Encode(c), trainable; Adam, learning rate 1e-2
+3. for step in 1..K:                  # never stops early
+       loss = MSE(Invert(z), z_target)
+       backprop, Adam step
+       every 10 steps:
+           image = Decode(z); run the provider's detector; record score,
+           native verdict and PSNR / SSIM / LPIPS against c
+           save checkpoint (z, Adam state, random states, image, record),
+           then the image, then the log row
+4. report the saved images at steps 50, 100 and 150
+```
+
+**Calibrated threshold.** For each scheme, orient the scores so that larger means more watermarked (L1 distances are negated). Sort the 200 unwatermarked scores s(1) ≤ … ≤ s(200), set the threshold to s(198), and accept an image when its score is strictly greater. At most two calibration images pass, and fewer if there are ties. This is an empirical operating point with 0.5-percentage-point resolution, not a proven population false-positive rate.
+
+**Removal attacks.**
+
+| Attack | Setting | Implementation |
+|---|---|---|
+| JPEG | quality 95 | Pillow, saved and reloaded |
+| Gaussian blur | radius 2 | Pillow `GaussianBlur` |
+| Crop and rescale | centered 80% crop, back to 512×512 | Pillow, default bicubic resize |
+| Diffusion purification | strength 0.3, empty prompt, no guidance | MarkDiffusion `DiffusionPurification` with the pinned SD 2.1-base |
+
+**The six detectors.** All six invert the image to its starting noise and compare it with the key. Thresholds are MarkDiffusion's defaults at the pinned commit.
+
+| Scheme | What the detector compares | Score | Flagged when |
+|---|---|---|---|
+| Tree-Ring [1] | Ring of Fourier coefficients of the recovered noise against the key | L1 distance | below 50 |
+| Ring-ID [2] | Multi-key version of the Tree-Ring ring | L1 distance | below 50 |
+| SFW | Fourier-domain pattern against the key, as implemented in MarkDiffusion [9] | L1 distance | below 50 |
+| Gaussian Shading [3] | Signs of the recovered noise read back as bits | bit accuracy | above 0.7 |
+| WIND [5] | Recovered noise against the salted noise family | cosine similarity | above 0.5 |
+| PRC [4] | Decoded pseudorandom codeword | PRC score | decoder verdict |
+
+**Statistics.** Rates use 95% Wilson intervals, which stay informative when every trial succeeds or fails. Mean PSNR, SSIM and LPIPS use 10,000-resample percentile bootstraps over photographs (never over steps), seed 261.
+
+## 7. Draft of the report
+
+### 7.1 Tentative abstract
+
+A semantic watermark hides a signal in the starting noise of a diffusion model and checks for it by inverting a candidate image back to that noise. Published evaluations of these schemes test almost only whether the signal survives edits. We study the opposite failure, false attribution: an attacker takes a real photograph that the provider never generated and changes it until the provider's detector says it is watermarked. Building on the MarkDiffusion toolkit and the black-box imprint attack of Mueller et al., we benchmark six semantic schemes on Stable Diffusion 2.1-base with full-size baselines (100 watermarked, 200 unwatermarked and 100 real images per scheme), forgery at fixed budgets of 50, 100 and 150 optimization steps on ten photographs, and four removal attacks on 100 watermarked images. Every result is reported at the toolkit's native threshold and at a threshold calibrated to a 1% false-positive rate. With the provider's model as the attacker, the native detectors of Gaussian Shading, PRC and WIND accepted all ten forged photographs, and those of Tree-Ring, Ring-ID and SFW six to seven; under the calibrated test Ring-ID and SFW also reached ten of ten. A centered crop removed five of the six watermarks, and diffusion purification defeated three native detectors whose calibrated scores still separated the images. Forgeability and removal robustness do not go together across these schemes. All experiments are inference only, and every rate carries a confidence interval.
+
+### 7.2 Report outline
+
+1. **Introduction.** Removal versus forgery; why false attribution matters for provenance; contributions.
+2. **Background and related work.** Semantic watermarking and inversion-based detection, the six core and three extended schemes, removal attacks, forgery attacks, existing benchmarks (Section 7.3).
+3. **Threat model.** Attacker knowledge and compute, what counts as a successful forgery, and the three attacker-model conditions: C1 the provider's model (SD 2.1-base), C2 a related model (SD 1.5), C3 a different architecture (PixArt-Σ).
+4. **Benchmark design.** Inclusion rule, native and calibrated operating points, fixed step budgets, removal attacks, resumable measurement (Sections 5 and 6).
+5. **Experimental setup.** Models, data, sample sizes, statistics, compute (Section 3).
+6. **Results.** Baselines; forgery by scheme, budget and threshold; perceptual cost; removal robustness next to forgeability; transfer under C2 and C3.
+7. **Discussion.** Native versus calibrated decisions; which design properties track forgery resistance; implications for provenance; limitations.
+8. **Conclusion and future work.**
+9. **References.**
+10. **Appendix.** Scheme configurations, per-cell results, reproducibility details.
+
+### 7.3 Literature survey
+
+**Schemes.** Semantic watermarks sit in the latent noise rather than in the pixels. Tree-Ring [1] writes a ring pattern into the Fourier transform of the initial noise and detects it by DDIM inversion [12] of the image followed by an L1 distance to the pattern. RingID [2] shows that part of Tree-Ring's apparent robustness comes from the distribution shift the pattern introduces, and redesigns the key so that many keys can be told apart. Gaussian Shading [3] maps a secret bit string to the initial noise through Gaussian quantiles, which keeps the noise distribution unchanged and lets the detector recover the bits and score bit accuracy. PRC [4] replaces the bit string with a pseudorandom error-correcting code and proves that watermarked and unwatermarked outputs are computationally indistinguishable. WIND [5] combines a Fourier group index with a salted family of initial noises, so retrieval is fast and the noise carries no fixed pattern. ROBIN [6] implants the watermark at an intermediate diffusion state and optimizes a hiding prompt. SEAL [7] ties the watermark to a caption of the image. GaussMarker [8] embeds in both the spatial and the frequency domain and adds a learned restorer. MarkDiffusion [9] puts these schemes behind one interface with shared detection code, which is what makes a cross-scheme benchmark possible in one semester.
+
+**Removal.** WAVES [10] is the reference benchmark; it ranks watermarks under distortions, diffusion-based regeneration and adversarial attacks. The four attacks we use are the ones MarkDiffusion ships. Zhao et al. [11] show that regeneration through a diffusion model removes any pixel-space watermark of bounded strength, and DiffPure [13] is the purification procedure most of these attacks reuse. UnMarker [14] attacks the spectral content directly and reaches semantic watermarks too. Saberi et al. [15] give fundamental limits for watermark-based detectors and include a spoofing attack, the earliest forgery result we found.
+
+**Forgery.** Mueller et al. [16] is the direct ancestor of this project. Their imprint attack optimizes a cover image so that the attacker's inversion of it lands on the inverted noise of one watermarked reference, with no knowledge of the scheme. They evaluate Tree-Ring and Gaussian Shading only. Jain et al. [17] forge and remove latent-noise watermarks from a single image and cover more schemes, but not on a common model, threshold policy or step budget, and not next to removal numbers.
+
+**What this check-in adds.** None of the scheme papers reports a false-attribution rate on real photographs, and the benchmarks report removal only. Section 3 now gives both for six schemes, on the same model, photographs and thresholds. It also shows something the literature does not discuss: a scheme's native decision rule can make it look resistant to forgery (Ring-ID, SFW) and fragile to purification (Ring-ID, SFW, WIND), while its scores say otherwise.
+
+## 8. Check-ins and contributions
+
+### 8.1 Commits since Check-in 2
+
+The repository has 45 commits by all three members. Each commit adds one component, fix, result or document. The twelve commits since Check-in 2 are:
+
+| Date | Member | Commit |
+|---|---|---|
+| 2026-10-29 | Yashashav | docs(checkin3): report full results with figures and the requirement map |
+| 2026-10-29 | Latha | results(checkin3): add the complete 5,700-measurement benchmark |
+| 2026-10-29 | Kanaka Sarat | feat(report): render tables and saved figures in the PDF draft |
+| 2026-10-24 | Yashashav | feat(checkin3): freeze selections and verify the GPU workflow |
+| 2026-10-23 | Latha | docs(checkin3): add protocol and clearly labeled PDF draft |
+| 2026-10-23 | Kanaka Sarat | feat(colab): orchestrate the full Check-in 3 benchmark |
+| 2026-10-23 | Yashashav | feat(preflight): validate GPU readiness and harden benchmark recovery |
+| 2026-10-23 | Latha | feat(report): report exact budgets and measurement completeness |
+| 2026-10-23 | Kanaka Sarat | feat(benchmark): enforce complete baselines and fixed-budget attacks |
+| 2026-10-23 | Yashashav | feat(reproducibility): persist toolkit keys and extend input prefixes |
+| 2026-10-23 | Latha | feat(imprint): resume latent and optimizer checkpoints atomically |
+| 2026-10-23 | Kanaka Sarat | feat(benchmark): add versioned measurements and calibration protocol |
+
+<p class="note">Commits per member in total: Yashashav 16, Kanaka Sarat 15, Latha 14.</p>
+
+### 8.2 What each member did since Check-in 2
+
+The team agrees that the three members contributed equally. Implementation, experiment execution, interpretation and writing were shared; each member owned one area and committed the work for it (Section 8.1).
+
+**Kanaka Sarat Siripurapu (measurement, calibration and statistics).** The versioned measurement log and the calibration protocol; the rule that every baseline is complete before any attack runs, together with the fixed-budget attack protocol; the Colab notebook that orchestrates the full benchmark; and the renderer for the report's tables and figures.
+
+**Latha Boralingaiah (forgery, checkpointing and validation).** Atomic checkpoints of the latent and optimizer state with exact resume; completeness reporting per budget; the protocol write-up and the first labeled draft; and the validated 5,700-measurement result set.
+
+**Yashashav Devalapalli Kamalraj (environment, data and reproducible execution).** Saved watermark keys and the extended prompt and photograph selections; the GPU readiness checks and recovery hardening; the frozen selections and GPU workflow check; and this report with its figures. The final 17-hour job ran on Yashashav's CoE HPC account.
+
+## 9. Next steps
+
+In the order fixed by the specification, for the final report:
+
+1. Imprint forgery with Stable Diffusion 1.5 as the attacker (condition C2), on the same ten covers and budgets, to measure how much of the forgery depends on the attacker having the provider's model.
+2. A strength sweep for the two attacks that split the decision rules (diffusion purification and crop), to see where each scheme's native and calibrated detection fail.
+3. Up to three additional schemes from Section 7.3 (ROBIN, SEAL, GaussMarker), if they pass the inclusion rule.
+4. The final report, built from the outline in Section 7.2.
+
+**Risks.** Compute is no longer the bottleneck: the cluster finished the remaining Check-in 3 work in one 17-hour job. The main risk for C2 is setting up a second model on offline compute nodes, which the Check-in 3 setup already handles for the first.
+
+## References
+
+[1] Y. Wen, J. Kirchenbauer, J. Geiping, T. Goldstein. Tree-Ring Watermarks: Fingerprints for Diffusion Images that are Invisible and Robust. NeurIPS 2023. arXiv:2305.20030.
+
+[2] H. Ci, P. Yang, Y. Song, M. Z. Shou. RingID: Rethinking Tree-Ring Watermarking for Enhanced Multi-Key Identification. ECCV 2024. arXiv:2404.14055.
+
+[3] Z. Yang et al. Gaussian Shading: Provable Performance-Lossless Image Watermarking for Diffusion Models. CVPR 2024. arXiv:2404.04956.
+
+[4] S. Gunn, X. Zhao, D. Song. An Undetectable Watermark for Generative Image Models. 2024. arXiv:2410.07369.
+
+[5] K. Arabi, B. Feuer, R. T. Witter, C. Hegde, N. Cohen. Hidden in the Noise: Two-Stage Robust Watermarking for Images. 2024. arXiv:2412.04653.
+
+[6] H. Huang, Y. Wu, Q. Wang. ROBIN: Robust and Invisible Watermarks for Diffusion Models with Adversarial Optimization. NeurIPS 2024. arXiv:2411.03862.
+
+[7] K. Arabi, R. T. Witter, C. Hegde, N. Cohen. SEAL: Semantic Aware Image Watermarking. 2025. arXiv:2503.12172.
+
+[8] K. Li et al. GaussMarker: Robust Dual-Domain Watermark for Diffusion Models. ICML 2025. arXiv:2506.11444.
+
+[9] L. Pan et al. MarkDiffusion: An Open-Source Toolkit for Generative Watermarking of Latent Diffusion Models. 2025. arXiv:2509.10569.
+
+[10] B. An et al. WAVES: Benchmarking the Robustness of Image Watermarks. ICML 2024.
+
+[11] X. Zhao et al. Invisible Image Watermarks Are Provably Removable Using Generative AI. NeurIPS 2024. arXiv:2306.01953.
+
+[12] J. Song, C. Meng, S. Ermon. Denoising Diffusion Implicit Models. ICLR 2021. arXiv:2010.02502.
+
+[13] W. Nie et al. Diffusion Models for Adversarial Purification. ICML 2022. arXiv:2205.07460.
+
+[14] A. Kassis, U. Hengartner. UnMarker: A Universal Attack on Defensive Image Watermarking. IEEE S&P 2025. arXiv:2405.08363.
+
+[15] M. Saberi et al. Robustness of AI-Image Detectors: Fundamental Limits and Practical Attacks. ICLR 2024. arXiv:2310.00076.
+
+[16] A. Mueller, D. Lukovnikov, J. Thietke, A. Fischer, E. Quiring. Black-Box Forgery Attacks on Semantic Watermarks for Diffusion Models. CVPR 2025. arXiv:2412.03283.
+
+[17] A. Jain, Y. Kobayashi, N. Murata, Y. Takida, T. Shibuya, Y. Mitsufuji, N. Cohen, N. Memon, J. Togelius. Forging and Removing Latent-Noise Diffusion Watermarks Using a Single Image. 2025. arXiv:2504.20111.
