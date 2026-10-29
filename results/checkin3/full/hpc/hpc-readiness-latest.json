@@ -1,0 +1,16 @@
+{
+  "passed": true,
+  "checked_utc": "2026-10-29T00:26:35.909081+00:00",
+  "gpu": "{\"name\": \"NVIDIA A100-PCIE-40GB\", \"memory_bytes\": 42405855232, \"cuda_visible_devices\": \"0\", \"driver\": \"NVRM version: NVIDIA UNIX Open Kernel Module for x86_64  590.44.01  Release Build  (root@cs001.hpc.coe)  Fri Jul  3 08:34:23 AM PDT 2026\\nGCC version:  gcc version 11.5.0 20240719 (Red Hat 11.5.0-14) (GCC) \\n\"}",
+  "boot_id": "ee0a53eb-77ae-407c-b412-ca9467910fe6",
+  "backup": "/fs/sfs/scratch/cmpe295-bertin/runs/cmpe261-checkin3-20261026T230208-1dc8d6/checkin3-setup/recovery-20261029T001123Z",
+  "original_preflight": "/fs/sfs/scratch/cmpe295-bertin/runs/cmpe261-checkin3-20261026T230208-1dc8d6/original-preflight.json",
+  "original_preflight_sha256": "4816425fc29bc6fc876b2446ca9420311f835392866be59074dc71fbbcacf663",
+  "hpc_preflight": "/fs/sfs/scratch/cmpe295-bertin/runs/cmpe261-checkin3-20261026T230208-1dc8d6/checkin3-preflight-hpc-20261029T001103Z/preflight.json",
+  "hpc_preflight_sha256": "fda03e187cd5de3de5c6279ed210ba7de9aee2332348f405324b12feedb5fbb2",
+  "remaining_imprint_steps": 5730,
+  "estimated_remaining_imprint_hours": 13.295226529773014,
+  "estimate_excludes": "detector evaluation, saved-artifact validation, removal, reporting, and setup",
+  "protocol_changes": [],
+  "limits": "Continue until provider limits; preserve partial work without reducing sample counts or budgets"
+}
