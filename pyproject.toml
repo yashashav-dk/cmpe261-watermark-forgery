@@ -26,7 +26,7 @@ attack = [
     "accelerate>=1.1",
     "lpips==0.1.4",
 ]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "markdown>=3.5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
