@@ -1,0 +1,1 @@
+{"calibrated_test":"calibrated score test","included":true,"label":"empirical calibration operating point","native_generated_fpr":0.04,"native_tpr":0.99,"resolution_percentage_points":0.5,"rule":"score > threshold","threshold":-49.10634994506836}

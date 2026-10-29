@@ -1,0 +1,17 @@
+{
+  "preserved_rows": 2727,
+  "current_rows": 2728,
+  "duplicate_keys": 0,
+  "first_new_measurement": {
+    "protocol": "checkin3-v2",
+    "scheme": "SFW",
+    "stage": "imprint",
+    "attack": "imprint",
+    "image_id": "25424",
+    "kind": "forged",
+    "step": 130
+  },
+  "artifact": "images/SFW/imprint/25424_130.png",
+  "sha256": "99033eba49ddea494402af231a6f2afcda1ad28df9ac50921bf97c0418dfed9d",
+  "checked_utc": "2026-10-29T00:28:47.563748+00:00"
+}
