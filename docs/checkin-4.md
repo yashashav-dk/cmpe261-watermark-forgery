@@ -16,7 +16,7 @@ The instructor and the TA have Editor access to the Drive folder. The repository
 |---|---|---|
 | Draft of the project report (required) | Done: full draft built from the floor results and the report outline | This document; source `docs/checkin-4.md` |
 | Project artifacts: code and data (required) | Done as hyperlinks to GitHub, Colab notebooks and Drive | Section 10 |
-| Meaningful check-ins, about 8 to 10 (required) | 9 commits since Check-in 3, three by each member | Section 11.1 and the repository history |
+| Meaningful check-ins, about 8 to 10 (required) | 10 commits since Check-in 3 | Section 11.1 and the repository history |
 | Instructor and TA invited (required) | Drive: both have Editor access. GitHub: public repository, open to both; instructor also has write access | Top of this document |
 | Repository and Drive link in the report (required) | Done | Top of this document |
 
@@ -300,6 +300,7 @@ Data selections are committed under `data/`. Model weights and the large image t
 
 | Date | Member | Commit |
 |---|---|---|
+| 2026-11-15 | Kanaka Sarat | docs(checkin4): spell out Check-in 3 freeze, resume path, and current work |
 | 2026-11-15 | Yashashav | docs(checkin4): update README and point to the draft report |
 | 2026-11-14 | Latha | feat(pdf): render the Check-in 4 draft report |
 | 2026-11-13 | Kanaka Sarat | docs: draft the full project report from the floor results |
@@ -310,7 +311,7 @@ Data selections are committed under `data/`. Model weights and the large image t
 | 2026-11-04 | Latha | feat(sweep): parameterize crop and purification strengths |
 | 2026-11-03 | Kanaka Sarat | feat(models): register pinned C1 and C2 attacker pipelines |
 
-<p class="note">Nine commits since Check-in 3, three by each member. Running totals will be updated on the final report once the GPU jobs land.</p>
+<p class="note">Ten commits since Check-in 3. Running totals will be updated on the final report once the GPU jobs land.</p>
 
 ### 11.2 What each member did since Check-in 3
 
