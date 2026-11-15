@@ -4,9 +4,9 @@ CMPE 261 (Generative AI), San José State University, Fall 2026. Team project.
 
 Semantic watermarks for diffusion models are tested almost entirely against removal. This project measures the opposite failure: how often an attacker can make an innocent real photograph verify as watermarked.
 
-## Findings so far (Check-in 3)
+## Findings so far (Check-in 4 draft)
 
-All six core semantic schemes on Stable Diffusion 2.1-base, at full size: 100 watermarked, 200 unwatermarked and 100 real COCO images per scheme for the baselines; imprint forgery (Mueller et al., CVPR 2025) with the provider's own model on ten real photographs per scheme, run to a fixed 150-step budget and scored at steps 50, 100 and 150; and four removal attacks on 100 watermarked images per scheme. Every result is given at the toolkit's native threshold and at a threshold calibrated to 1% false positives on the 200 unwatermarked images. 5,700 measurements in [`results/checkin3/full/`](results/checkin3/full/).
+The floor from Check-in 3 is frozen and written up as a draft project report ([`docs/Group6_CMPE261_CheckIn_4.pdf`](docs/Group6_CMPE261_CheckIn_4.pdf), source [`docs/checkin-4.md`](docs/checkin-4.md)). All six core semantic schemes on Stable Diffusion 2.1-base, at full size: 100 watermarked, 200 unwatermarked and 100 real COCO images per scheme for the baselines; imprint forgery (Mueller et al., CVPR 2025) with the provider's own model on ten real photographs per scheme, run to a fixed 150-step budget and scored at steps 50, 100 and 150; and four removal attacks on 100 watermarked images per scheme. Every result is given at the toolkit's native threshold and at a threshold calibrated to 1% false positives on the 200 unwatermarked images. 5,700 measurements in [`results/checkin3/full/`](results/checkin3/full/). Offline draft analyses and figures are in [`results/checkin4/`](results/checkin4/).
 
 | Scheme | Clean TPR / FPR generated / FPR real (native) | Forged at step 150, native / calibrated | Removal (native / calibrated, of 100): JPEG · blur · crop · purification |
 |---|---|---|---|
@@ -35,8 +35,9 @@ Against the commitments in [`docs/project-spec.md`](docs/project-spec.md):
 
 - **F1, clean and real-photo baselines:** done for 6 of 6 core schemes at full size (100 / 200 / 100); all six pass the inclusion rule.
 - **F2, imprint forgery, same-model attacker:** done for 6 of 6 core schemes, 10 covers each, fixed budgets of 50, 100 and 150 steps.
-- **F3, removal robustness:** done for 6 of 6 core schemes, four attacks on 100 watermarked images each.
-- **Next:** forgery with Stable Diffusion 1.5 as the attacker (C2), strength sweeps for crop and purification, up to three extended schemes.
+- **F3, removal resistance:** done for 6 of 6 core schemes, four attacks on 100 watermarked images each.
+- **Draft report:** Check-in 4 ships the full draft and the C2 / strength-sweep runners. GPU numbers for C2 and the sweeps land in the final report.
+- **Next:** finish C2 imprint and the crop / purification strength sweeps on the CoE HPC cluster; try up to three extended schemes against the inclusion rule.
 
 Measured cost per imprint step: 4.8 s on an NVIDIA RTX PRO 6000, 18.6 s on an NVIDIA L4, 8.2 to 8.4 s on an NVIDIA A100 40 GB. The last 38 forgery covers and all removal runs took one 17-hour A100 job on the SJSU CoE HPC cluster.
 
@@ -58,6 +59,9 @@ Shared Google Drive folder (team, instructor, and TA have access): [CMPE261 Grou
 | [`docs/CMPE261_CheckIn2_Group6.pdf`](docs/CMPE261_CheckIn2_Group6.pdf) | Check-in 2 report: baselines and forgery for all six core schemes |
 | [`docs/Group6_CMPE261_CheckIn_3.pdf`](docs/Group6_CMPE261_CheckIn_3.pdf) | Check-in 3 report: full baselines, fixed-budget forgery and removal for all six core schemes |
 | [`docs/checkin-3.md`](docs/checkin-3.md) | Source of the Check-in 3 report |
+| [`docs/Group6_CMPE261_CheckIn_4.pdf`](docs/Group6_CMPE261_CheckIn_4.pdf) | Check-in 4 draft project report |
+| [`docs/checkin-4.md`](docs/checkin-4.md) | Source of the Check-in 4 draft |
+| [`docs/checkin-4-protocol.md`](docs/checkin-4-protocol.md) | C2 and strength-sweep protocol |
 | [`data/README.md`](data/README.md) | Data sources and committed selections |
 
 ## Layout
@@ -73,7 +77,9 @@ Shared Google Drive folder (team, instructor, and TA have access): [CMPE261 Grou
 | `results/tr150/` | Tree-Ring rerun with a 150-step cap |
 | `results/checkin2/` | Check-in 2 run: log, per-cover forgery table, figures (four new schemes, 150-step cap) |
 | `notebooks/03_checkin3_colab.ipynb` | Check-in 3 run on Colab: setup, preflight, monitoring, backup |
+| `notebooks/04_checkin4_colab.ipynb` | Check-in 4: offline analysis, C2 imprint, strength sweeps |
 | `results/checkin3/full/` | Check-in 3 run: 5,700-row log, calibrations, manifest, environment, summaries, figures, cluster verification records |
+| `results/checkin4/` | Draft analyses, figures, and (after the GPU jobs) C2 / sweep outputs |
 | `results/figures/` | Figures that combine runs |
 
 ## Running
