@@ -20,18 +20,52 @@ The instructor and the TA have Editor access to the Drive folder. The repository
 | Instructor and TA invited (required) | Drive: both have Editor access. GitHub: public repository, open to both; instructor also has write access | Top of this document |
 | Repository and Drive link in the report (required) | Done | Top of this document |
 
-## 2. Where Check-in 3 left off
+## 2. From Check-in 3 to this draft
 
-Check-in 3 finished the floor commitments in the specification (F1, F2, F3) for all six core schemes: full-size baselines, fixed-budget imprint forgery under the provider's own model (condition C1), and four removal attacks. It left four next steps for the final report. This check-in turns that material into a draft project report, adds the C2 and strength-sweep software, and recomputes the floor numbers into report tables and figures.
+### 2.1 Where Check-in 3 stopped
 
-| # | Next step from Check-in 3 | Status at Check-in 4 |
+Check-in 3 closed the floor in the specification. Nothing in that floor was re-run for this draft. The frozen package is `results/checkin3/full/` (5,700 rows in `measurements-v2.json`), with the Check-in 3 write-up in `docs/Group6_CMPE261_CheckIn_3.pdf`.
+
+| Floor item | Done at Check-in 3 | What was saved |
 |---|---|---|
-| 1 | Imprint forgery with Stable Diffusion 1.5 as the attacker (condition C2) | **Software and protocol done** (`src/wmforge/models.py`, `src/wmforge/checkin4.py`, notebook). GPU run scheduled on the CoE HPC cluster; numbers land in the final report. |
-| 2 | Strength sweep for diffusion purification and crop | **Software and grids done** (`src/wmforge/sweep.py`). Crop ratios 0.95 to 0.60; purification strengths 0.10 to 0.50. GPU run scheduled with C2. |
-| 3 | Up to three extended schemes (ROBIN, SEAL, GaussMarker) | Still pending the inclusion rule; not started. |
-| 4 | Draft of the final report | **Done in this document.** |
+| F1 baselines | 100 watermarked, 200 unwatermarked, 100 real photos per scheme; all six schemes pass inclusion | Native rates, calibrated thresholds, baseline images |
+| F2 imprint under C1 | 10 covers × 6 schemes to step 150; scored at 50, 100 and 150 | Trajectories, checkpoints, PSNR / SSIM / LPIPS |
+| F3 removal | JPEG, blur, crop 0.8, purification 0.3 on 100 watermarked images per scheme | Attacked images and verdicts |
+| Keys and identity | One watermark key per scheme; run manifest and environment freeze | `keys/{scheme}.pkl`, calibrations, `manifest.json` |
 
-The provider model, MarkDiffusion commit, detector thresholds, covers and keys are unchanged from Check-in 3. Every number in Sections 5 to 7 is recomputed from `results/checkin3/full/measurements-v2.json` by `python -m wmforge.analysis` and `scripts/checkin4_analysis.py`.
+Check-in 3 also recorded how that run itself was resumed: Colab started the work, the runtime dropped mid-forgery, and the SJSU CoE HPC cluster finished the remaining covers and all of F3 from the saved optimizer checkpoints in one 17-hour A100 job. That resume path is unchanged and is what the new C2 / sweep jobs reuse.
+
+What Check-in 3 did **not** finish (its Section 9):
+
+1. Imprint with Stable Diffusion 1.5 as the attacker (condition C2).
+2. Strength sweeps for crop and purification.
+3. Extended schemes (ROBIN, SEAL, GaussMarker), if they pass inclusion.
+4. The draft of the project report (recommended then; required now).
+
+### 2.2 How we resumed
+
+We did not regenerate the floor. Check-in 4 starts from the Check-in 3 tree as a read-only base:
+
+1. **Same provider.** Stable Diffusion 2.1-base at the same revision, same MarkDiffusion commit, same native thresholds.
+2. **Same keys.** `results/checkin3/full/keys/{scheme}.pkl` are restored; C2 and the sweeps refuse to invent a new key.
+3. **Same covers and prompts.** First ten ids in `data/coco_val2017_checkin3.txt`; prompts from `data/prompts_checkin3.txt`.
+4. **Same calibrations.** Each `{scheme}-calibration.json` from Check-in 3 is copied into the C2 / sweep output and used as-is.
+5. **Same measurement rules.** Fixed budgets 50 / 100 / 150, Wilson intervals, bootstrap over images with seed 261.
+6. **New writes only under Check-in 4 paths.** Code, analyses and figures go to `docs/checkin-4*`, `src/wmforge/{models,sweep,checkin4,analysis}.py`, `results/checkin4/`, `notebooks/04_checkin4_colab.ipynb`. The Check-in 3 files stay frozen.
+
+Offline tables and figures in this draft are recomputed from the frozen log by `python -m wmforge.analysis` and `scripts/checkin4_analysis.py`. No GPU was required for those.
+
+### 2.3 What is done now (Check-in 4)
+
+| # | Carry-over from Check-in 3 | Status in this check-in |
+|---|---|---|
+| 1 | C2 imprint (SD 1.5 attacker) | **Runner and protocol done.** `src/wmforge/models.py`, `src/wmforge/checkin4.py`, `docs/checkin-4-protocol.md`, notebook. GPU job scheduled on CoE HPC; rates go in the final report. |
+| 2 | Crop and purification strength sweeps | **Grids and runner done.** `src/wmforge/sweep.py`. Crop ratios 0.95 to 0.60; purification strengths 0.10 to 0.50. GPU job scheduled with C2. |
+| 3 | Extended schemes | Not started; still gated on the inclusion rule. |
+| 4 | Draft of the project report | **Done in this document** (required for Check-in 4). |
+| 5 | (extra) Read the floor for the draft | **Done.** Forgeability order, native vs calibrated disagreement, purification gap and per-cover PSNR written under `results/checkin4/`. |
+
+In short: Check-in 3 owns the measured floor. Check-in 4 owns the draft report, the offline reading of that floor, and the software that continues into C2 and the strength sweeps without touching the frozen results.
 
 ## 3. Abstract (draft)
 
