@@ -16,7 +16,7 @@ The instructor (Dr. Bertin Cordova-Diba) and the TA have Editor access to the Dr
 |---|---|---|
 | Draft of the project report (required) | Done in this document | Sections 3 to 8; source `docs/checkin-4.md` |
 | Project artifacts: code and data (required) | Done as hyperlinks to GitHub, Colab and Drive | Section 7 |
-| Meaningful check-ins, about 8 to 10 (required) | 15 commits since Check-in 3 on the public repo | Section 8.1 |
+| Meaningful check-ins, about 8 to 10 (required) | 16 commits since Check-in 3 on the public repo | Section 8.1 |
 | Instructor and TA invited (required) | Drive Editor access; public GitHub; instructor has write access | Top of this document |
 | Repository and Drive link in the report (required) | Done | Top of this document |
 
@@ -143,6 +143,8 @@ After purification, native detectors of Ring-ID, SFW and WIND keep 0 of 100, whi
 
 | Date | Member | Commit |
 |---|---|---|
+| 2026-11-15 | Kanaka Sarat | docs(checkin4): keep only two CI3 paragraphs; center report on new work |
+| 2026-11-15 | Kanaka Sarat | docs(checkin4): refresh commit count after rewrite |
 | 2026-11-15 | Kanaka Sarat | feat(checkin4): redraw draft figures as a new Check-in 4 set |
 | 2026-11-15 | Kanaka Sarat | docs(checkin4): name the instructor as Dr. Bertin Cordova-Diba |
 | 2026-11-15 | Kanaka Sarat | docs(checkin4): sync final regenerated draft PDF |
