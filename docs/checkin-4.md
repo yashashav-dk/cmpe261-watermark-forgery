@@ -8,7 +8,7 @@ Repository: <https://github.com/yashashav-dk/cmpe261-watermark-forgery>
 
 Shared Drive folder: <https://drive.google.com/drive/folders/1wkXOxPjfI648JPod1Fi2m9ItfrPvWVIT>
 
-The instructor and the TA have Editor access to the Drive folder. The repository is public, so both can open it; the instructor (`rudolfbertin`) also has write access.
+The instructor (Dr. Bertin Cordova-Diba) and the TA have Editor access to the Drive folder. The repository is public, so both can open it; the instructor also has write access.
 
 ## 1. Where each requirement is met
 
