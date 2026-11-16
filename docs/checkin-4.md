@@ -116,7 +116,7 @@ This project measures false attribution for six semantic schemes on one pinned m
 
 ## 7. Experimental results (floor, draft)
 
-Stable Diffusion 2.1-base at 512×512, 50 sampling and inversion steps, guidance 7.5, full precision, each scheme at its MarkDiffusion default. The log has 5,700 rows. Figures below mix Check-in 3 plots with Check-in 4 offline figures.
+Stable Diffusion 2.1-base at 512×512, 50 sampling and inversion steps, guidance 7.5, full precision, each scheme at its MarkDiffusion default. The log has 5,700 rows. All figures below are new Check-in 4 renders saved under `results/checkin4/figures/` (drawn by `scripts/checkin4_figures.py` from the frozen floor log).
 
 ### 7.1 Clean and real-photo baselines (F1)
 
@@ -143,8 +143,8 @@ Stable Diffusion 2.1-base at 512×512, 50 sampling and inversion steps, guidance
 | Tree-Ring | L1 distance below 49.1 | 99/100 | 2/200 | 0/100 |
 
 <figure>
-<img src="../results/checkin3/full/figures/fig1_baselines.png">
-<figcaption>Figure 1. Detector scores from the two baselines (400 images per scheme). Filled: native detector flagged the image. Dashed black: native threshold. Dotted orange: calibrated threshold.</figcaption>
+<img src="../results/checkin4/figures/fig1_baselines.png">
+<figcaption>Figure 1. Check-in 4 draft figure. Detector scores from the two baselines (400 images per scheme). Filled: native detector flagged the image. Dashed black: native threshold. Dotted orange: calibrated threshold.</figcaption>
 </figure>
 
 All six schemes enter. Tree-Ring is the only one with a non-zero native false-positive rate on generated images (4%) and on real photographs (2%). Calibration on generated images does not carry over exactly to photographs: Gaussian Shading and WIND flag 2 and 4 of 100 real photographs under the calibrated test.
@@ -163,13 +163,18 @@ All six schemes enter. Tree-Ring is the only one with a non-zero native false-po
 | SFW | 0/10 | 10/10 | 4/10 | 10/10 | 7/10 [40%, 89%] | 10/10 | step 90 (80 to 150) |
 
 <figure>
-<img src="../results/checkin3/full/figures/fig2_trajectories.png">
-<figcaption>Figure 2. Detector score of every cover at every evaluated step. Up means closer to being flagged. Filled marker: native detector accepted the image.</figcaption>
+<img src="../results/checkin4/figures/fig2_trajectories.png">
+<figcaption>Figure 2. Check-in 4 draft figure. Detector score of every cover at every evaluated step under C1. Up means closer to being flagged. Filled marker: native detector accepted the image.</figcaption>
 </figure>
 
 <figure>
-<img src="../results/checkin4/figures/figA_forgeability_order.png">
-<figcaption>Figure 3. Offline recompute of the C1 forgeability order by median first native acceptance. Labels show how many of ten covers were accepted by step 150.</figcaption>
+<img src="../results/checkin4/figures/fig3_forgeability_order.png">
+<figcaption>Figure 3. Check-in 4 draft figure. C1 forgeability order by median first native acceptance. Labels show how many of ten covers were accepted by step 150.</figcaption>
+</figure>
+
+<figure>
+<img src="../results/checkin4/figures/fig9_budget_acceptance.png">
+<figcaption>Figure 3b. Check-in 4 draft figure. Accepted covers at steps 50, 100 and 150 under the native and calibrated rules.</figcaption>
 </figure>
 
 **Every core scheme can be forged, but not every photograph.** At step 150 the native detectors of Gaussian Shading, PRC and WIND accepted all ten covers; Tree-Ring and Ring-ID accepted six and SFW seven. With ten covers, 10/10 still means 72% to 100% at 95% confidence and 6/10 means 31% to 83%.
@@ -187,8 +192,8 @@ Pooled across the six schemes (60 images per budget):
 | step 150 | 20.45 [19.65, 21.29] | 0.482 [0.448, 0.517] | 0.262 [0.246, 0.278] |
 
 <figure>
-<img src="../results/checkin4/figures/figD_cover_psnr.png">
-<figcaption>Figure 4. Mean PSNR at step 150 by cover, averaged over the six schemes. Damage tracks the photograph more than the scheme.</figcaption>
+<img src="../results/checkin4/figures/fig4_cover_psnr.png">
+<figcaption>Figure 4. Check-in 4 draft figure. Mean PSNR at step 150 by cover, averaged over the six schemes. Damage tracks the photograph more than the scheme.</figcaption>
 </figure>
 
 Scheme means at a fixed budget differ by less than 0.2 dB. Covers 25424, 166768 and 519208 stay near 25 dB at step 150; the other seven end between 17 and 20 dB. At 20 dB and SSIM 0.48 the edits are visible, so these forgeries are not imperceptible at the budgets tested.
@@ -207,13 +212,13 @@ Scheme means at a fixed budget differ by less than 0.2 dB. Covers 25424, 166768 
 | SFW | 90 / 100 | 20 / 100 | 0 / 2 | 0 / 100 |
 
 <figure>
-<img src="../results/checkin3/full/figures/fig5_removal.png">
-<figcaption>Figure 5. Removal heat maps with clean detection for reference.</figcaption>
+<img src="../results/checkin4/figures/fig5_removal.png">
+<figcaption>Figure 5. Check-in 4 draft figure. Removal survival heat maps under both decision rules, with clean detection for reference.</figcaption>
 </figure>
 
 <figure>
-<img src="../results/checkin4/figures/figC_purification_gap.png">
-<figcaption>Figure 6. After purification, native verdicts and calibrated scores diverge for Ring-ID, SFW and WIND.</figcaption>
+<img src="../results/checkin4/figures/fig6_purification_gap.png">
+<figcaption>Figure 6. Check-in 4 draft figure. After purification, native verdicts and calibrated scores diverge for Ring-ID, SFW and WIND.</figcaption>
 </figure>
 
 Crop-and-rescale removes five of the six watermarks under either rule. Purification defeats the native detectors of Ring-ID, SFW and WIND (0 of 100) while the calibrated tests still detect 95 to 100. Gaussian Shading survives purification, blur and JPEG and fails only on crop. Tree-Ring is the only scheme that both resisted forgery on some covers under both rules and survived crop.
@@ -223,8 +228,8 @@ Crop-and-rescale removes five of the six watermarks under either rule. Purificat
 ### 7.5 Threshold disagreement (offline)
 
 <figure>
-<img src="../results/checkin4/figures/figB_threshold_disagreement.png">
-<figcaption>Figure 7. Counts of forgeries (budgets 50, 100, 150) where only one decision rule accepts the image.</figcaption>
+<img src="../results/checkin4/figures/fig7_threshold_disagreement.png">
+<figcaption>Figure 7. Check-in 4 draft figure. Counts of forgeries (budgets 50, 100, 150) where only one decision rule accepts the image.</figcaption>
 </figure>
 
 On imprint rows alone, Ring-ID and SFW show 18 and 19 calibrated-only accepts out of 30 budgeted images. Tree-Ring shows one native-only accept. On removal, the calibrated-only count reaches 181 for Ring-ID, 192 for SFW and 125 for WIND, almost all from blur and purification. The draft treats native and calibrated columns as separate facts, not as interchangeable summaries.
@@ -242,8 +247,8 @@ On imprint rows alone, Ring-ID and SFW show 18 and 19 calibrated-only accepts ou
 **Pipeline.** Three parts pass only images: a MarkDiffusion harness (generate, detect), the imprint attack adapted from [16], and a versioned measurement log that refuses to mix runs with different code, keys, inputs or environment.
 
 <figure>
-<img src="../results/checkin3/full/figures/fig7_pipeline.png">
-<figcaption>Figure 8. Floor pipeline. F1 decides inclusion and calibration; F2 and F3 are scored under both rules.</figcaption>
+<img src="../results/checkin4/figures/fig8_pipeline.png">
+<figcaption>Figure 8. Check-in 4 draft figure. How this draft continues the frozen floor: read-only Check-in 3 inputs, new Check-in 4 outputs, C2 and sweeps pending GPU rates.</figcaption>
 </figure>
 
 **Imprint at a fixed budget.**
@@ -288,7 +293,7 @@ The draft does not claim a winner. It claims a measurement: under C1, every core
 | Check-in 1 / 2 / 3 reports | [`docs/checkin-1.md`](checkin-1.md), [`docs/CMPE261_CheckIn2_Group6.pdf`](CMPE261_CheckIn2_Group6.pdf), [`docs/Group6_CMPE261_CheckIn_3.pdf`](Group6_CMPE261_CheckIn_3.pdf) |
 | This draft | [`docs/checkin-4.md`](checkin-4.md) |
 | Floor measurements (5,700 rows) | [`results/checkin3/full/`](../results/checkin3/full/) |
-| Offline draft analyses and figures | [`results/checkin4/analysis/`](../results/checkin4/analysis/), [`results/checkin4/figures/`](../results/checkin4/figures/) |
+| Offline draft analyses and new figures | [`results/checkin4/analysis/`](../results/checkin4/analysis/), [`results/checkin4/figures/`](../results/checkin4/figures/) (`scripts/checkin4_figures.py`) |
 | C2 and sweep runners | [`src/wmforge/checkin4.py`](../src/wmforge/checkin4.py), [`src/wmforge/sweep.py`](../src/wmforge/sweep.py), [`src/wmforge/models.py`](../src/wmforge/models.py) |
 | Colab notebooks | [`notebooks/03_checkin3_colab.ipynb`](../notebooks/03_checkin3_colab.ipynb), [`notebooks/04_checkin4_colab.ipynb`](../notebooks/04_checkin4_colab.ipynb) |
 
