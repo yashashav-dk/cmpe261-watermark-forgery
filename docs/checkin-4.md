@@ -66,45 +66,62 @@ python -m wmforge.checkin4 c2-imprint --checkin3 results/checkin3/full --out res
 python -m wmforge.checkin4 sweep --checkin3 results/checkin3/full --out results/checkin4/sweeps
 ```
 
-## 5. New offline findings (Check-in 4 reading)
+## 5. New offline findings and all Check-in 4 figures
 
-These numbers come from the new analysis code on the frozen log. They are draft-report findings for Check-in 4, not a reprint of the Check-in 3 section text.
+These numbers and plots come from the new Check-in 4 analysis code on the frozen log. Every figure below lives only under `results/checkin4/figures/` and is drawn by `scripts/checkin4_figures.py`.
 
-### 5.1 Forgeability order under C1
+### 5.1 Baselines and C1 trajectories (new renders)
+
+<figure>
+<img src="../results/checkin4/figures/fig1_baselines.png">
+<figcaption>Figure 2. Check-in 4 figure. Clean and real-photo baselines for all six schemes.</figcaption>
+</figure>
+
+<figure>
+<img src="../results/checkin4/figures/fig2_trajectories.png">
+<figcaption>Figure 3. Check-in 4 figure. Fixed-budget C1 imprint trajectories for all six schemes.</figcaption>
+</figure>
+
+### 5.2 Forgeability order and budgets
 
 Gaussian Shading is first (median native accept at step 10, 10/10). Then PRC (30), WIND (40), Tree-Ring (65), then SFW and Ring-ID (90). At step 150 the calibrated rule lifts Ring-ID and SFW to 10/10 while Tree-Ring stays at 6/10.
 
 <figure>
 <img src="../results/checkin4/figures/fig3_forgeability_order.png">
-<figcaption>Figure 2. New Check-in 4 figure. Median first native acceptance; labels show accepts by step 150.</figcaption>
+<figcaption>Figure 4. Check-in 4 figure. Median first native acceptance; labels show accepts by step 150.</figcaption>
 </figure>
 
 <figure>
 <img src="../results/checkin4/figures/fig9_budget_acceptance.png">
-<figcaption>Figure 3. New Check-in 4 figure. Accepted covers at steps 50, 100 and 150 under both rules.</figcaption>
+<figcaption>Figure 5. Check-in 4 figure. Accepted covers at steps 50, 100 and 150 under both rules.</figcaption>
 </figure>
 
-### 5.2 Native versus calibrated disagreement
+### 5.3 Native versus calibrated disagreement
 
 On imprint budgets 50 / 100 / 150, Ring-ID and SFW show 18 and 19 calibrated-only accepts out of 30. That is the main draft claim of this check-in: for those two schemes the native cutoff hides how far the forgery already moved.
 
 <figure>
 <img src="../results/checkin4/figures/fig7_threshold_disagreement.png">
-<figcaption>Figure 4. New Check-in 4 figure. Forgery rows where only one decision rule accepts the image.</figcaption>
+<figcaption>Figure 6. Check-in 4 figure. Forgery rows where only one decision rule accepts the image.</figcaption>
 </figure>
 
-### 5.3 Purification gap and cover damage
+### 5.4 Removal, purification gap and cover damage
+
+<figure>
+<img src="../results/checkin4/figures/fig5_removal.png">
+<figcaption>Figure 7. Check-in 4 figure. Removal survival heat maps under native and calibrated rules.</figcaption>
+</figure>
 
 After purification, native detectors of Ring-ID, SFW and WIND keep 0 of 100, while calibrated scores still keep 95 to 100. Mean PSNR at step 150 is cover-dependent: a few covers stay near 25 dB, most fall to about 17 to 20 dB.
 
 <figure>
 <img src="../results/checkin4/figures/fig6_purification_gap.png">
-<figcaption>Figure 5. New Check-in 4 figure. Purification survival, native versus calibrated.</figcaption>
+<figcaption>Figure 8. Check-in 4 figure. Purification survival, native versus calibrated.</figcaption>
 </figure>
 
 <figure>
 <img src="../results/checkin4/figures/fig4_cover_psnr.png">
-<figcaption>Figure 6. New Check-in 4 figure. Mean PSNR at step 150 by cover across the six schemes.</figcaption>
+<figcaption>Figure 9. Check-in 4 figure. Mean PSNR at step 150 by cover across the six schemes.</figcaption>
 </figure>
 
 ## 6. Draft abstract and outline (Check-in 4 text)
