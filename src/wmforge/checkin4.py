@@ -8,14 +8,13 @@ saved watermarked baselines and re-detect after each parameterized attack.
 from __future__ import annotations
 
 import argparse
-import gc
 import json
-import sys
 from pathlib import Path
 
 from PIL import Image
 
 from wmforge import benchmark as b
+from wmforge.device import empty_cache, resolve_device
 from wmforge.harness import SCHEMES
 from wmforge.models import TARGET, resolve_attacker
 from wmforge.sweep import (
@@ -41,6 +40,30 @@ def require_included(calibration: dict, scheme: str) -> None:
         raise ValueError(f"{scheme} was excluded at Check-in 3; refusing C2 / sweep")
 
 
+def _preflight_checkin3(checkin3: Path, schemes, need_inputs: bool = False) -> None:
+    missing = []
+    if not (checkin3 / "measurements-v2.json").exists():
+        missing.append(str(checkin3 / "measurements-v2.json"))
+    if not (checkin3 / "images").exists():
+        missing.append(str(checkin3 / "images"))
+    if not (checkin3 / "keys").exists():
+        missing.append(str(checkin3 / "keys"))
+    for scheme in schemes:
+        keypath = checkin3 / f"keys/{scheme}.pkl"
+        if not keypath.exists():
+            missing.append(str(keypath))
+        cal = checkin3 / f"{scheme}-calibration.json"
+        if not cal.exists():
+            missing.append(str(cal))
+    if need_inputs and not (checkin3 / "inputs").exists():
+        missing.append(str(checkin3 / "inputs"))
+    if missing:
+        raise FileNotFoundError(
+            "Check-in 3 GPU tree incomplete (need keys/images on Drive or local):\n  "
+            + "\n  ".join(missing[:12])
+        )
+
+
 def run_c2_imprint(args):
     """Imprint the same ten covers with an SD 1.5 attacker; detect with the provider."""
     from wmforge.checkin3 import run_forgery, seed_all, source_identity
@@ -48,11 +71,14 @@ def run_c2_imprint(args):
     from wmforge.harness import build_harness, load_target_pipe
     from wmforge.imprint import load_attacker
     from wmforge.key_state import restore_or_save
-    import torch
+
+    device = resolve_device(getattr(args, "device", "auto"))
+    print(f"using device: {device}", flush=True)
 
     checkin3 = Path(args.checkin3)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
+    _preflight_checkin3(checkin3, args.schemes, need_inputs=True)
 
     cover_ids = Path("data/coco_val2017_checkin3.txt").read_text().splitlines()[:10]
     if len(cover_ids) != 10:
@@ -74,6 +100,7 @@ def run_c2_imprint(args):
         max_steps=150,
         validate_every=10,
         checkin3_dir=str(checkin3.resolve()),
+        device=device,
     )
     b.bind_manifest(out / "manifest.json", identity)
     log = b.BenchmarkLog(out / "measurements-v2.json")
@@ -82,31 +109,29 @@ def run_c2_imprint(args):
         path = checkin3 / f"inputs/{image_id}.png"
         if not path.exists():
             path = out / f"inputs/{image_id}.png"
+        if not path.exists():
+            raise FileNotFoundError(f"missing cover image: {path}")
         with Image.open(path) as image:
             return image.convert("RGB")
 
-    pipe = load_target_pipe(TARGET.model_id, TARGET.revision, "cuda")
+    pipe = load_target_pipe(TARGET.model_id, TARGET.revision, device)
     for scheme in args.schemes:
         calibration = load_checkin3_calibration(checkin3, scheme)
         require_included(calibration, scheme)
         b.bind_manifest(out / f"{scheme}-calibration.json", calibration)
         seed_all(261 + list(SCHEMES).index(scheme))
-        harness = build_harness(scheme, pipe, "cuda")
+        harness = build_harness(scheme, pipe, device)
         keypath = checkin3 / f"keys/{scheme}.pkl"
-        if not keypath.exists():
-            raise FileNotFoundError(f"missing Check-in 3 key: {keypath}")
         restore_or_save(harness, pipe, keypath)
         attacker = load_attacker(
-            attacker_spec.model_id, attacker_spec.revision, "cuda"
+            attacker_spec.model_id, attacker_spec.revision, device
         )
         run_forgery(
             harness, attacker, cover_ids, prompts, load_cover, log, out
         )
-        # Tag every new imprint row with condition C2 via a sidecar index.
         del attacker
         del harness
-        gc.collect()
-        torch.cuda.empty_cache()
+        empty_cache(device)
         print(f"finished C2 imprint for {scheme}", flush=True)
 
     (out / "condition.json").write_text(
@@ -126,7 +151,6 @@ def run_purification_sweep(harness, log, root, pipe, strengths=PURIFICATION_STRE
         and r["kind"] == "watermarked"
     ]
     if not sources:
-        # Fall back to reading artifacts listed in an external Check-in 3 log.
         raise ValueError(f"no watermarked baselines for {harness.scheme}")
     for strength in strengths:
         purifier = DiffusionPurification(
@@ -167,12 +191,15 @@ def run_sweeps(args):
     from wmforge.checkin3 import seed_all
     from wmforge.harness import build_harness, load_target_pipe
     from wmforge.key_state import restore_or_save
-    import torch
+
+    device = resolve_device(getattr(args, "device", "auto"))
+    print(f"using device: {device}", flush=True)
 
     checkin3 = Path(args.checkin3)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    # Sweeps read baseline artifacts from the Check-in 3 tree and write into out/.
+    _preflight_checkin3(checkin3, args.schemes, need_inputs=False)
+
     identity = dict(
         protocol="checkin4-sweep-v1",
         provider_model=TARGET.model_id,
@@ -180,23 +207,18 @@ def run_sweeps(args):
         crop_ratios=list(CROP_RATIOS),
         purification_strengths=list(PURIFICATION_STRENGTHS),
         checkin3_dir=str(checkin3.resolve()),
+        device=device,
     )
     b.bind_manifest(out / "manifest.json", identity)
 
-    # Copy measurement references: start a fresh sweep log; baseline rows are
-    # borrowed by pointing artifact paths at the Check-in 3 root through a
-    # symlink when needed.
     images = out / "images"
     if not images.exists():
         images.symlink_to((checkin3 / "images").resolve(), target_is_directory=True)
-    # Seed the sweep log with the Check-in 3 baseline rows so run_crop_sweep can
-    # find sources, without rewriting the original file.
     base_log = b.BenchmarkLog(checkin3 / "measurements-v2.json")
     log = b.BenchmarkLog(out / "measurements-v2.json")
     for row in base_log.rows:
         if row["stage"] == "baseline" and row["kind"] == "watermarked":
             if log.get(**{k: row[k] for k in b.KEYS}) is None:
-                # Re-key protocol for the sweep log while keeping artifact paths.
                 transplanted = dict(row)
                 transplanted["protocol"] = "checkin4-sweep-v1"
                 try:
@@ -204,21 +226,28 @@ def run_sweeps(args):
                 except ValueError:
                     pass
 
-    pipe = load_target_pipe(TARGET.model_id, TARGET.revision, "cuda")
+    pipe = load_target_pipe(TARGET.model_id, TARGET.revision, device)
     for scheme in args.schemes:
         calibration = load_checkin3_calibration(checkin3, scheme)
         require_included(calibration, scheme)
         seed_all(261 + list(SCHEMES).index(scheme))
-        harness = build_harness(scheme, pipe, "cuda")
+        harness = build_harness(scheme, pipe, device)
         restore_or_save(harness, pipe, checkin3 / f"keys/{scheme}.pkl")
         if "crop" in args.attacks:
             run_crop_sweep(harness, log, out, CROP_RATIOS)
         if "purification" in args.attacks:
             run_purification_sweep(harness, log, out, pipe, PURIFICATION_STRENGTHS)
         del harness
-        gc.collect()
-        torch.cuda.empty_cache()
+        empty_cache(device)
         print(f"finished sweeps for {scheme}", flush=True)
+
+
+def _add_device_arg(parser):
+    parser.add_argument(
+        "--device",
+        default="auto",
+        help="auto|cuda|mps|cpu (auto prefers cuda, then mps, then cpu)",
+    )
 
 
 def main(argv=None):
@@ -229,6 +258,7 @@ def main(argv=None):
     c2.add_argument("--checkin3", type=Path, default=Path("results/checkin3/full"))
     c2.add_argument("--out", type=Path, default=Path("results/checkin4/c2"))
     c2.add_argument("--schemes", nargs="+", choices=list(SCHEMES), default=list(SCHEMES))
+    _add_device_arg(c2)
 
     sweeps = sub.add_parser("sweep", help="Crop and purification strength sweeps")
     sweeps.add_argument("--checkin3", type=Path, default=Path("results/checkin3/full"))
@@ -237,6 +267,7 @@ def main(argv=None):
     sweeps.add_argument(
         "--attacks", nargs="+", choices=["crop", "purification"], default=["crop", "purification"]
     )
+    _add_device_arg(sweeps)
 
     args = parser.parse_args(argv)
     if args.command == "c2-imprint":
