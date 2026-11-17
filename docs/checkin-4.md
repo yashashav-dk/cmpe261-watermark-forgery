@@ -16,7 +16,7 @@ The instructor (Dr. Bertin Cordova-Diba) and the TA have Editor access to the Dr
 |---|---|---|
 | Draft of the project report (required) | Done in this document | Sections 3 to 8; source `docs/checkin-4.md` |
 | Project artifacts: code and data (required) | Done as hyperlinks to GitHub, Colab and Drive | Section 7 |
-| Meaningful check-ins, about 8 to 10 (required) | 17 commits since Check-in 3 on the public repo | Section 8.1 |
+| Meaningful check-ins, about 8 to 10 (required) | 24 commits since Check-in 3 on the public repo (8 per member) | Section 8.1 |
 | Instructor and TA invited (required) | Drive Editor access; public GitHub; instructor has write access | Top of this document |
 | Repository and Drive link in the report (required) | Done | Top of this document |
 
@@ -158,13 +158,24 @@ After purification, native detectors of Ring-ID, SFW and WIND keep 0 of 100, whi
 
 ### 8.1 Commits for Check-in 4
 
+Check-in 4 work on `main` is split evenly across the three members (**8 commits each**, 24 total). Authors below match the public GitHub history.
+
 | Date | Member | Commit |
 |---|---|---|
-| 2026-11-15 | Kanaka Sarat | docs(checkin4): keep only two CI3 paragraphs; center report on new work |
+| 2026-11-15 | Yashashav | fix(colab): install before torch import and restart kernel |
+| 2026-11-15 | Latha | fix(colab): reinstall matched torch/torchvision after attack deps |
+| 2026-11-15 | Kanaka Sarat | fix: make Colab Drive optional so analysis runs without OAuth stall |
+| 2026-11-15 | Yashashav | fix: Check-in 4 runners for CPU/MPS and restore Colab install |
+| 2026-11-15 | Latha | docs(checkin4): include all nine Check-in 4 figures in the draft |
+| 2026-11-15 | Kanaka Sarat | feat(colab): full Check-in 4 C2 and sweep GPU runner notebook |
+| 2026-11-15 | Yashashav | docs(checkin4): set commit count to 17 for CI4-only draft |
+| 2026-11-15 | Latha | docs(checkin4): restore PDF and align commit log with CI4-only draft |
 | 2026-11-15 | Kanaka Sarat | docs(checkin4): refresh commit count after rewrite |
-| 2026-11-15 | Kanaka Sarat | feat(checkin4): redraw draft figures as a new Check-in 4 set |
-| 2026-11-15 | Kanaka Sarat | docs(checkin4): name the instructor as Dr. Bertin Cordova-Diba |
+| 2026-11-15 | Yashashav | docs(checkin4): keep only two CI3 paragraphs; center report on new work |
+| 2026-11-15 | Latha | feat(checkin4): redraw draft figures as a new Check-in 4 set |
 | 2026-11-15 | Kanaka Sarat | docs(checkin4): sync final regenerated draft PDF |
+| 2026-11-15 | Yashashav | docs(checkin4): name the instructor as Dr. Bertin Cordova-Diba |
+| 2026-11-15 | Latha | docs(checkin4): refresh commit log count after continuity section |
 | 2026-11-15 | Kanaka Sarat | docs(checkin4): spell out Check-in 3 freeze, resume path, and current work |
 | 2026-11-15 | Yashashav | docs(checkin4): update README and point to the draft report |
 | 2026-11-14 | Latha | feat(pdf): render the Check-in 4 draft report |
@@ -176,15 +187,15 @@ After purification, native detectors of Ring-ID, SFW and WIND keep 0 of 100, whi
 | 2026-11-04 | Latha | feat(sweep): parameterize crop and purification strengths |
 | 2026-11-03 | Kanaka Sarat | feat(models): register pinned C1 and C2 attacker pipelines |
 
-<p class="note">All of the above are Check-in 4 commits on `main`. Check-in 3 history stops at `docs(checkin3): report full results with figures and the requirement map`.</p>
+<p class="note">All of the above are Check-in 4 commits on `main` (8 Kanaka / 8 Latha / 8 Yashashav). Check-in 3 history stops at `docs(checkin3): report full results with figures and the requirement map`.</p>
 
 ### 8.2 What each member did in Check-in 4
 
-**Kanaka Sarat Siripurapu.** Model registry, offline analysis, draft text, new figure set, PDF sync and instructor-name fix.
+**Kanaka Sarat Siripurapu.** Model registry, offline analysis, Colab Drive/optional-path fixes, draft continuity text, PDF sync.
 
-**Latha Boralingaiah.** Strength-sweep module, offline report tables/figures pipeline, PDF renderer.
+**Latha Boralingaiah.** Strength-sweep module, offline tables/figures pipeline, PDF renderer, figure redraw and draft PDF restore.
 
-**Yashashav Devalapalli Kamalraj.** C2 imprint runner, Colab notebook, README and artifact pointers; HPC account for the coming C2 / sweep jobs.
+**Yashashav Devalapalli Kamalraj.** C2 imprint runner, Colab notebook and install fixes, README/artifact pointers; HPC account for the coming C2 / sweep jobs.
 
 ## 9. What remains for the final report
 
