@@ -4,8 +4,6 @@
 
 CMPE 261 Sec 01, Fall 2026. Group 6. Kanaka Sarat Siripurapu (019132776, kanakasarat.siripurapu@sjsu.edu), Latha Boralingaiah (018301361, latha.boralingaiah@sjsu.edu), Yashashav Devalapalli Kamalraj (017856371, yashashav.devalapallikamalraj@sjsu.edu). Department of Computer Engineering, San José State University.
 
-<p class="note">All three authors are enrolled in CMPE 261 (Fall 2026).</p>
-
 Repository (Check-in 4 branch): <https://github.com/yashashav-dk/cmpe261-watermark-forgery/tree/checkin4-results>
 
 Shared Drive folder: <https://drive.google.com/drive/folders/1wkXOxPjfI648JPod1Fi2m9ItfrPvWVIT>
@@ -356,7 +354,7 @@ Check-in 4 work on `main` is split evenly across the three members (**8 commits 
 
 **AI assistance.** The authors used Claude (Anthropic), an AI assistant, to assemble and edit this draft from the team's earlier check-in documents and the Check-in 3 measurement files, to check every reported number against those files, to fix the document links and figure labels, and to prepare and launch the cluster jobs for the C2 and strength-sweep experiments. The authors reviewed this draft and take responsibility for its content.
 
-**Contributors.** There are no contributors outside the class; the three authors are listed under the title.
+**Authors and enrollment.** All three authors (Kanaka Sarat Siripurapu, Latha Boralingaiah and Yashashav Devalapalli Kamalraj) are enrolled in CMPE 261 (Fall 2026) at San José State University. There are no contributors outside the class.
 
 **Publication status.** This work has not been submitted to any conference or journal.
 
