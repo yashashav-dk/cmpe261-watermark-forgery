@@ -314,7 +314,7 @@ Check-in 4 work on `main` is split evenly across the three members (**8 commits 
 
 ## References
 
-[1] Y. Wen, J. Kirchenbauer, J. Geiping, and T. Goldstein, "Tree-Ring watermarks: Fingerprints for diffusion images that are invisible and robust," in *Proc. NeurIPS*, 2023.
+[1] Y. Wen, J. Kirchenbauer, J. Geiping, and T. Goldstein, "Tree-Rings watermarks: Invisible fingerprints for diffusion images," in *Proc. NeurIPS*, 2023.
 
 [2] H. Ci, P. Yang, Y. Song, and M. Z. Shou, "RingID: Rethinking Tree-Ring watermarking for enhanced multi-key identification," in *Proc. ECCV*, 2024.
 
