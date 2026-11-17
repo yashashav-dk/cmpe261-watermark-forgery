@@ -350,6 +350,8 @@ Check-in 4 work on `main` is split evenly across the three members (**8 commits 
 
 [18] S. J. Lee and N. I. Cho, "Semantic watermarking reinvented: Enhancing robustness and generation quality with Fourier integrity," in *Proc. ICCV*, 2025.
 
+<div style="break-before: page; page-break-before: always;"></div>
+
 ## Disclosures
 
 **AI assistance.** The authors used Claude (Anthropic), an AI assistant, to assemble and edit this draft from the team's earlier check-in documents and the Check-in 3 measurement files, to check every reported number against those files, to fix the document links and figure labels, and to prepare and launch the cluster jobs for the C2 and strength-sweep experiments. The authors reviewed this draft and take responsibility for its content.
@@ -358,4 +360,4 @@ Check-in 4 work on `main` is split evenly across the three members (**8 commits 
 
 **Publication status.** This work has not been submitted to any conference or journal.
 
-**Source code and data.** Code, measurement logs and figures are in the public repository <https://github.com/yashashav-dk/cmpe261-watermark-forgery> (branch `checkin4-results`), released under the license in its `LICENSE` file. Model weights and large image sets are in the shared Drive folder linked above.
+**Source code and data.** Code, measurement logs and figures are in the public repository <https://github.com/yashashav-dk/cmpe261-watermark-forgery> (branch `checkin4-results`), released under the license in its `LICENSE` file. Model weights and large image sets are in the shared Drive folder linked on page 1 (<https://drive.google.com/drive/folders/1wkXOxPjfI648JPod1Fi2m9ItfrPvWVIT>).
