@@ -314,16 +314,6 @@ Check-in 4 work on `main` is split evenly across the three members (**8 commits 
 
 **Yashashav Devalapalli Kamalraj.** C2 imprint runner, Colab notebook and install fixes, README/artifact pointers; HPC account for the coming C2 / sweep jobs.
 
-## Disclosures
-
-**AI assistance.** The authors used Claude (Anthropic), an AI assistant, to assemble and edit this draft from the team's earlier check-in documents and the Check-in 3 measurement files, to check every reported number against those files, to fix the document links and figure labels, and to prepare and launch the cluster jobs for the C2 and strength-sweep experiments. The authors reviewed this draft and take responsibility for its content.
-
-**Contributors.** There are no contributors outside the class; the three authors are listed under the title.
-
-**Publication status.** This work has not been submitted to any conference or journal.
-
-**Source code and data.** Code, measurement logs and figures are in the public repository <https://github.com/yashashav-dk/cmpe261-watermark-forgery> (branch `checkin4-results`), released under the license in its `LICENSE` file. Model weights and large image sets are in the shared Drive folder linked above.
-
 ## References
 
 [1] Y. Wen, J. Kirchenbauer, J. Geiping, and T. Goldstein, "Tree-Ring watermarks: Fingerprints for diffusion images that are invisible and robust," in *Proc. NeurIPS*, 2023.
@@ -361,3 +351,13 @@ Check-in 4 work on `main` is split evenly across the three members (**8 commits 
 [17] A. Jain *et al.*, "Forging and removing latent-noise diffusion watermarks using a single image," arXiv:2504.20111, 2025.
 
 [18] S. J. Lee and N. I. Cho, "Semantic watermarking reinvented: Enhancing robustness and generation quality with Fourier integrity," in *Proc. ICCV*, 2025.
+
+## Disclosures
+
+**AI assistance.** The authors used Claude (Anthropic), an AI assistant, to assemble and edit this draft from the team's earlier check-in documents and the Check-in 3 measurement files, to check every reported number against those files, to fix the document links and figure labels, and to prepare and launch the cluster jobs for the C2 and strength-sweep experiments. The authors reviewed this draft and take responsibility for its content.
+
+**Contributors.** There are no contributors outside the class; the three authors are listed under the title.
+
+**Publication status.** This work has not been submitted to any conference or journal.
+
+**Source code and data.** Code, measurement logs and figures are in the public repository <https://github.com/yashashav-dk/cmpe261-watermark-forgery> (branch `checkin4-results`), released under the license in its `LICENSE` file. Model weights and large image sets are in the shared Drive folder linked above.
